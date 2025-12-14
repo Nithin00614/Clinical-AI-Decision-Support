@@ -141,4 +141,60 @@ Note:
 - Stratified train-test split is used to preserve class distribution
 - Prevents biased evaluation due to class imbalance
 
+-Scaling ensures numerical features are on comparable ranges so models train correctly and fairly.
+-Stratification ensures class proportions are preserved across train and test splits, preventing biased evaluation, especially in imbalanced medical datasets
 
+### Baseline Model Observations
+- Logistic Regression used as an interpretable baseline
+- Stratified split preserved CKD distribution
+- Recall for CKD class is prioritized over accuracy
+- ROC-AUC used to assess ranking quality
+
+### Risk Score Interpretation
+- Model outputs a probability representing CKD risk
+- Higher probability indicates higher clinical risk
+- Enables threshold-based decision support instead of binary prediction
+
+### Error & Uncertainty Analysis
+- False negatives are clinically most critical
+- Low-confidence predictions highlight cases requiring further testing
+- Risk-based outputs allow safer decision-making than hard labels
+
+### Uncertainty-Aware Risk Estimation
+Instead of relying solely on binary predictions, the model outputs a probability score representing CKD risk. Predictions closer to 0.5 are treated as low-confidence, while extreme values indicate higher confidence. This approach supports safer clinical decision-making by identifying uncertain cases that may require additional testing.
+
+### Threshold Optimization
+The default 0.5 threshold was adjusted to prioritize recall for CKD cases. Lower thresholds increase sensitivity and reduce the risk of missed diagnoses, which is critical in clinical screening scenarios. Threshold selection was guided by recall–precision trade-offs rather than accuracy alone.
+
+### Explainability with SHAP
+SHAP was used to provide global and local explanations for CKD risk predictions. Global explanations identified clinically relevant features such as serum creatinine and hemoglobin as key drivers. Local explanations enabled patient-level transparency by highlighting individual risk contributors.
+
+“I used SHAP to provide both global and patient-level explanations. SHAP decomposes the model’s predicted CKD risk into additive feature contributions, allowing me to identify clinically meaningful drivers such as serum creatinine and hemoglobin. This ensures transparency and trust in medical decision support."
+
+### Counterfactual Analysis
+Counterfactual reasoning was used to evaluate how minimal, clinically plausible changes in laboratory values affect CKD risk. Simulated improvements in serum creatinine and hemoglobin resulted in a reduced predicted risk, demonstrating actionable decision support rather than static prediction.
+
+### Model Comparison
+Logistic Regression was used as an interpretable baseline, while XGBoost was introduced to capture non-linear feature interactions. Performance was compared using identical preprocessing, stratified splits, and clinically motivated thresholds to ensure fair evaluation.
+
+### Model-Level Uncertainty
+Uncertainty was estimated using disagreement between Logistic Regression and XGBoost predictions. Cases with high disagreement were flagged as uncertain, highlighting scenarios where additional clinical validation may be required.
+
+“I compared interpretable and non-linear models under a consistent pipeline and used ensemble disagreement to estimate uncertainty instead of blindly trusting a single model."
+
+### Knowledge Base
+A small, curated medical knowledge base was created using trusted CKD guideline excerpts to support grounded clinical reasoning and prevent hallucinated explanations.
+
+### Retrieval-Augmented Reasoning
+Relevant CKD guidelines were retrieved based on SHAP-identified risk factors and provided as grounded context for clinical reasoning, ensuring explanations remain evidence-based.
+
+##Prompt template.
+You are a clinical decision support assistant.
+Use ONLY the provided medical guidelines.
+Explain why the patient is at risk and suggest next clinical steps.
+Do not provide diagnoses or treatment.
+
+“I integrated a retrieval-augmented LLM layer that grounds model predictions and SHAP explanations in trusted medical guidelines, preventing hallucinations and enabling transparent clinical reasoning.”
+
+## System Summary
+This project implements an uncertainty-aware, explainable, and retrieval-augmented clinical decision support system for CKD risk assessment, combining machine learning, interpretability, counterfactual analysis, and grounded LLM reasoning.

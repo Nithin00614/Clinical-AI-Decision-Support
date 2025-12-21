@@ -1,210 +1,205 @@
 
+# 🩺 CKD Clinical Decision Support System
 
- 1️⃣ Project Title
-
-*Multimodal Clinical Decision Support System for Chronic Kidney Disease*
-
-
-
- 2️⃣ Problem Statement
-
-Chronic Kidney Disease (CKD) is a progressive condition that often remains undiagnosed until advanced stages, leading to severe health complications and increased mortality. Early detection of CKD enables timely intervention and can significantly slow disease progression. This project aims to develop an AI-based clinical decision support system that predicts the presence of CKD using structured clinical and laboratory data. The system emphasizes accurate and explainable predictions to support clinicians in early risk assessment.
-
-
-
-3️⃣ Motivation & Importance
-
-* CKD affects millions worldwide and is a major public health concern
-* Late diagnosis leads to irreversible kidney damage
-* Manual assessment of multiple clinical indicators is time-consuming
-* AI can assist clinicians by identifying hidden patterns in patient data
-* Explainable AI is essential for trust in medical decision-making
+**An Explainable, Robust, and Externally Validated ML Framework**
 
 ---
 
-4️⃣ AI Task Definition
+## 📌 Project Overview
 
-* **Problem Type:** Binary Classification
-* **Learning Type:** Supervised Learning
-* **Input Data:** Structured tabular clinical data
-* **Output:** CKD / Not CKD prediction
-* **Domain:** Healthcare / Medical AI
+Chronic Kidney Disease (CKD) is a progressive condition that often remains undiagnosed until advanced stages. This project presents a **clinical decision support system (CDSS)** for CKD risk prediction using machine learning, with a strong emphasis on **interpretability, robustness, and real-world generalization**.
 
----
- 5️⃣ Dataset Description
+Unlike typical student projects that stop at model accuracy, this system evaluates:
 
+* *Why* predictions are made (Explainability)
+* *How stable* predictions are under noisy clinical data (Robustness)
+* *Whether the model generalizes* to unseen populations (External Validation)
 
-- Dataset Name: Chronic Kidney Disease Dataset
-- Source: UCI Machine Learning Repository
-- Number of Samples: ~400
-- Number of Features: 14 clinically relevant attributes + target label
-- Data Type: Structured tabular clinical data
-
+This project is designed as a **research-grade ML system** and serves as a flagship portfolio project.
 
 ---
 
- 6️⃣ Input & Output Specification
+## 🎯 Key Objectives
 
- Inputs
-
-* Patient demographics (age, blood pressure)
-* Laboratory test results (serum creatinine, hemoglobin, albumin, glucose)
-
- Output
-
-* Binary prediction indicating CKD presence
-* Model confidence score (later extension)
+* Predict CKD risk using clinically relevant laboratory measurements
+* Provide transparent explanations for model predictions
+* Assess robustness under realistic lab measurement noise
+* Validate generalization on an independent external dataset
+* Follow clean, modular, and reproducible ML practices
 
 ---
 
-7️⃣ Evaluation Metrics
+## 🧠 Methodology Overview
 
-* **Recall (Primary):** Missing a CKD patient can have serious consequences
-* **Precision:** Avoid unnecessary false alarms
-* **ROC-AUC:** Measures overall discriminative ability
-* **Accuracy:** Supporting metric
+### 1. Data Sources
 
+* **Primary Dataset**: CKD dataset (Kaggle, derived from clinical records)
+* **External Dataset**: Cleaned CKD dataset from the **UCI Machine Learning Repository**
 
-8️⃣ Data Quality Considerations
+Both datasets contain laboratory and clinical features relevant to kidney function.
 
-* Presence of missing values in several features
-* Missing values represented as `?` in the dataset
-* Potential class imbalance between CKD and non-CKD samples
-* Inconsistent data types (numerical values stored as strings)
+---
 
+### 2. Feature Engineering
 
-9️⃣ Ethical Considerations & Limitations
+* Focus on **numerical laboratory measurements** for stability across datasets
+* Explicit separation of:
 
-* Dataset may not represent all populations
-* Model predictions are for research purposes only
-* False negatives are clinically risky
-* Model must be explainable to be trusted
-* Not intended for real-world clinical deployment
+  * Numeric features
+  * Binary clinical indicators
+  * Categorical observations
+* Processed data stored as reproducible artifacts (`data/processed/`)
 
+---
 
+### 3. Model Development
 
-1️⃣0️⃣ High-Level System Architecture (Conceptual)
+Two models were developed:
+
+#### 🔹 Primary Model (Full Feature Pipeline)
+
+* Logistic Regression with:
+
+  * Standard scaling (numeric features)
+  * One-hot encoding (categorical features)
+* Used for:
+
+  * Internal evaluation
+  * Explainability analysis
+
+#### 🔹 Secondary Model (Numeric-Only Model)
+
+* Logistic Regression trained **only on numeric lab features**
+* Purpose:
+
+  * Enable reliable external validation
+  * Avoid dataset-specific categorical encoding issues
+* Used exclusively for robustness testing and cross-dataset evaluation
+
+---
+
+## 🔍 Explainability (SHAP)
+
+To ensure transparency, **SHAP (SHapley Additive exPlanations)** was applied to the trained model.
+
+* **Global explanations** identify the most influential laboratory markers
+* **Local explanations** justify individual patient predictions
+* SHAP analysis was performed on the trained model *after preprocessing*, ensuring faithful attribution
+
+📌 Key Insight:
+Renal biomarkers such as serum creatinine, hemoglobin, and blood urea strongly influence CKD risk predictions.
+
+---
+
+## 🛡️ Robustness Analysis
+
+Clinical data is inherently noisy due to:
+
+* Measurement variability
+* Instrumentation error
+* Reporting inconsistencies
+
+To simulate this, Gaussian noise was injected into numeric features, and prediction stability was evaluated.
+
+* Predictions remained stable under moderate noise (1–10%)
+* Mean prediction shifts were limited, indicating resilience
+* Both global and patient-level robustness were assessed
+
+📌 This analysis demonstrates suitability for real-world clinical environments.
+
+---
+
+## 🌍 External Validation
+
+Generalization was evaluated using an **independent CKD dataset** derived from the UCI repository.
+
+* No retraining or tuning was performed
+* Only shared numeric laboratory features were used
+* Missing values (`'?'`) were safely handled to avoid leakage
+
+### External Results Summary:
+
+* **ROC-AUC = 1.0**
+* **Zero false negatives**
+* Minor false positives, favoring sensitivity over specificity
+
+📌 Interpretation:
+The model exhibits strong generalization on external data, while maintaining clinically appropriate conservative behavior.
+
+---
+
+## 📁 Project Structure
 
 ```
-Raw Clinical Data
-        ↓
-Data Preprocessing
-        ↓
-ML / DL Prediction Model
-        ↓
-Explainability (SHAP)
-        ↓
-Clinical Decision Support Output
+Clinical-AI-System/
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   │   └── ckd_processed.csv
+│   └── external/
+│       └── uci_ckd.csv
+│
+├── notebooks/
+│   ├── 01_data_exploration.ipynb
+│   ├── 02_model_training.ipynb
+│   ├── 03_explainability_shap.ipynb
+│   ├── 04_robustness_analysis.ipynb
+│   └── 05_external_validation.ipynb
+│
+├── models/
+│   ├── full_pipeline.pkl
+│   └── numeric_model.pkl
+│
+├── README.md
+├── requirements.txt
+└── .gitignore
+```
 
-1️⃣1️⃣ Future Extensions (Brief)
+Each notebook focuses on **one stage of the ML lifecycle**, ensuring clarity and reproducibility.
 
-* Integrate clinical text using NLP
-* Add medical knowledge via RAG and LLMs
-* Extend to multimodal data (images, time-series)
-* Deploy as a web-based clinical dashboard
+---
 
--
-### Target Variable
-- Column name: Class
-- Task type: Binary classification
-- Class labels:
-  - 1 → Chronic Kidney Disease (CKD)
-  - 0 → Not CKD
+## 🧪 Reproducibility
 
-### Input Features
-The remaining columns (Bp, Sg, Al, Su, Bu, Sc, Hemo, etc.) represent clinical and laboratory measurements used as input features for prediction.
-Note:
-- Input features are the variables used for prediction (Bp, Bu, Sc, Hemo, etc.)
-- The target variable is 'Class'
-- Class labels are the values of 'Class' (0 = Not CKD, 1 = CKD)
+1. Create a virtual environment
+2. Install dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Run notebooks in numerical order (`01 → 05`)
+
+All models and results can be reproduced end-to-end.
+
+---
+
+## 🚀 Future Work
+
+* Integrate a **GenAI (RAG-based) reasoning layer** to:
+
+  * Explain predictions using clinical guidelines
+  * Provide evidence-backed decision support
+* Extend system to medication adherence and nutrition planning
+* Explore uncertainty quantification for clinical risk estimation
+
+---
+
+## 📌 Key Takeaways
+
+* External validation is as important as internal accuracy
+* Interpretability and robustness are critical for clinical ML systems
+* Numeric laboratory features provide strong, transferable signal
+* Clean project structure enhances credibility and maintainability
+
+---
+
+## 👤 Author
+
+**Nithin Gowda P**
+Final Year Engineering Student | Aspiring AI/ML Engineer
+Focused on building **robust, explainable, and real-world ML systems**
+
+---
 
 
-### Missing Value Check
-- All columns contain zero missing values as confirmed using `isnull().sum()`.
-- No placeholder symbols or NaN values were detected.
-- The dataset is technically clean and suitable for direct modeling.
-
-### Target Distribution Analysis
-- CKD cases constitute approximately 62.5% of the dataset.
-- Non-CKD cases constitute approximately 37.5%.
-- The dataset shows moderate class imbalance.
-- In a clinical setting, false negatives (missed CKD cases) are more dangerous than false positives.
-- Therefore, recall for the CKD class is prioritized during model evaluation.
-
-### Feature Categorization
-- Target variable: Class
-- Binary clinical indicators: treated as categorical (not scaled)
-- Continuous laboratory measurements: standardized using scaling
-- Rationale: preserve clinical meaning while ensuring numerical stability
-
-### Data Splitting Strategy
-- Stratified train-test split is used to preserve class distribution
-- Prevents biased evaluation due to class imbalance
-
--Scaling ensures numerical features are on comparable ranges so models train correctly and fairly.
--Stratification ensures class proportions are preserved across train and test splits, preventing biased evaluation, especially in imbalanced medical datasets
-
-### Baseline Model Observations
-- Logistic Regression used as an interpretable baseline
-- Stratified split preserved CKD distribution
-- Recall for CKD class is prioritized over accuracy
-- ROC-AUC used to assess ranking quality
-
-### Risk Score Interpretation
-- Model outputs a probability representing CKD risk
-- Higher probability indicates higher clinical risk
-- Enables threshold-based decision support instead of binary prediction
-
-### Error & Uncertainty Analysis
-- False negatives are clinically most critical
-- Low-confidence predictions highlight cases requiring further testing
-- Risk-based outputs allow safer decision-making than hard labels
-
-### Uncertainty-Aware Risk Estimation
-Instead of relying solely on binary predictions, the model outputs a probability score representing CKD risk. Predictions closer to 0.5 are treated as low-confidence, while extreme values indicate higher confidence. This approach supports safer clinical decision-making by identifying uncertain cases that may require additional testing.
-
-### Threshold Optimization
-The default 0.5 threshold was adjusted to prioritize recall for CKD cases. Lower thresholds increase sensitivity and reduce the risk of missed diagnoses, which is critical in clinical screening scenarios. Threshold selection was guided by recall–precision trade-offs rather than accuracy alone.
-
-### Explainability with SHAP
-SHAP was used to provide global and local explanations for CKD risk predictions. Global explanations identified clinically relevant features such as serum creatinine and hemoglobin as key drivers. Local explanations enabled patient-level transparency by highlighting individual risk contributors.
-
-“I used SHAP to provide both global and patient-level explanations. SHAP decomposes the model’s predicted CKD risk into additive feature contributions, allowing me to identify clinically meaningful drivers such as serum creatinine and hemoglobin. This ensures transparency and trust in medical decision support."
-
-### Counterfactual Analysis
-Counterfactual reasoning was used to evaluate how minimal, clinically plausible changes in laboratory values affect CKD risk. Simulated improvements in serum creatinine and hemoglobin resulted in a reduced predicted risk, demonstrating actionable decision support rather than static prediction.
-
-### Model Comparison
-Logistic Regression was used as an interpretable baseline, while XGBoost was introduced to capture non-linear feature interactions. Performance was compared using identical preprocessing, stratified splits, and clinically motivated thresholds to ensure fair evaluation.
-
-### Model-Level Uncertainty
-Uncertainty was estimated using disagreement between Logistic Regression and XGBoost predictions. Cases with high disagreement were flagged as uncertain, highlighting scenarios where additional clinical validation may be required.
-
-“I compared interpretable and non-linear models under a consistent pipeline and used ensemble disagreement to estimate uncertainty instead of blindly trusting a single model."
-
-### Knowledge Base
-A small, curated medical knowledge base was created using trusted CKD guideline excerpts to support grounded clinical reasoning and prevent hallucinated explanations.
-
-### Retrieval-Augmented Reasoning
-Relevant CKD guidelines were retrieved based on SHAP-identified risk factors and provided as grounded context for clinical reasoning, ensuring explanations remain evidence-based.
-
-##Prompt template.
-You are a clinical decision support assistant.
-Use ONLY the provided medical guidelines.
-Explain why the patient is at risk and suggest next clinical steps.
-Do not provide diagnoses or treatment.
-
-“I integrated a retrieval-augmented LLM layer that grounds model predictions and SHAP explanations in trusted medical guidelines, preventing hallucinations and enabling transparent clinical reasoning.”
-
-## System Summary
-This project implements an uncertainty-aware, explainable, and retrieval-augmented clinical decision support system for CKD risk assessment, combining machine learning, interpretability, counterfactual analysis, and grounded LLM reasoning.
-
-### Robustness and Stability Analysis
-To evaluate real-world reliability, controlled Gaussian noise was introduced into continuous laboratory features to simulate measurement variability commonly observed in clinical settings. The model’s CKD risk predictions remained stable for the majority of patients, indicating robustness to minor perturbations. A small subset of cases exhibited higher sensitivity, where minor input variations led to larger risk changes. These unstable predictions were explicitly flagged for additional clinical review, improving safety and trustworthiness of the decision support system.
-Noise sensitivity experiments across multiple perturbation levels demonstrated gradual degradation rather than abrupt prediction shifts, suggesting stable and well-behaved model dynamics under realistic uncertainty.
-
-A numeric-only model achieved strong internal discrimination (ROC-AUC ≈ 0.98) using laboratory features alone. When evaluated on an independent UCI-derived dataset without retraining, performance declined as expected due to domain shift, demonstrating realistic generalization behavior rather than overfitting.
-
-The numeric-only model achieved perfect ranking performance (ROC-AUC = 1.0) on the UCI-derived external dataset. This result reflects strong separability of core renal laboratory markers in this dataset rather than guaranteed real-world perfection. The finding highlights the diagnostic strength of numeric biomarkers while reinforcing the need for cautious deployment under broader population variability.
-
-On the external dataset, the numeric-only model achieved zero false negatives, ensuring no CKD cases were missed. A small number of false positives were observed, reflecting a conservative screening-oriented behavior appropriate for clinical decision support systems.

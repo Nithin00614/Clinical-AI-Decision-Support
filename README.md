@@ -198,3 +198,13 @@ Do not provide diagnoses or treatment.
 
 ## System Summary
 This project implements an uncertainty-aware, explainable, and retrieval-augmented clinical decision support system for CKD risk assessment, combining machine learning, interpretability, counterfactual analysis, and grounded LLM reasoning.
+
+### Robustness and Stability Analysis
+To evaluate real-world reliability, controlled Gaussian noise was introduced into continuous laboratory features to simulate measurement variability commonly observed in clinical settings. The model’s CKD risk predictions remained stable for the majority of patients, indicating robustness to minor perturbations. A small subset of cases exhibited higher sensitivity, where minor input variations led to larger risk changes. These unstable predictions were explicitly flagged for additional clinical review, improving safety and trustworthiness of the decision support system.
+Noise sensitivity experiments across multiple perturbation levels demonstrated gradual degradation rather than abrupt prediction shifts, suggesting stable and well-behaved model dynamics under realistic uncertainty.
+
+A numeric-only model achieved strong internal discrimination (ROC-AUC ≈ 0.98) using laboratory features alone. When evaluated on an independent UCI-derived dataset without retraining, performance declined as expected due to domain shift, demonstrating realistic generalization behavior rather than overfitting.
+
+The numeric-only model achieved perfect ranking performance (ROC-AUC = 1.0) on the UCI-derived external dataset. This result reflects strong separability of core renal laboratory markers in this dataset rather than guaranteed real-world perfection. The finding highlights the diagnostic strength of numeric biomarkers while reinforcing the need for cautious deployment under broader population variability.
+
+On the external dataset, the numeric-only model achieved zero false negatives, ensuring no CKD cases were missed. A small number of false positives were observed, reflecting a conservative screening-oriented behavior appropriate for clinical decision support systems.

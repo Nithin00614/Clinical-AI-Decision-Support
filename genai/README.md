@@ -43,3 +43,6 @@ Embeddings are generated locally and stored in a FAISS index for fast cosine-sim
 ## Retrieval Sanity Check
 A standalone retrieval test validates that guideline-relevant text is returned for clinical queries (e.g., serum creatinine, CKD risk), ensuring index quality before LLM integration.
 Retrieval tests confirm that clinically relevant guideline evidence (e.g., proteinuria, creatinine, albuminuria) is returned for CKD-related queries.
+
+## Grounded Clinical Reasoning
+The GenAI layer integrates ML predictions with SHAP-derived feature contributions and retrieves evidence from clinical guidelines. Reasoning is retrieval-grounded, citation-aware, and intentionally non-prescriptive.

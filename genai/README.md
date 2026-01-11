@@ -46,3 +46,17 @@ Retrieval tests confirm that clinically relevant guideline evidence (e.g., prote
 
 ## Grounded Clinical Reasoning
 The GenAI layer integrates ML predictions with SHAP-derived feature contributions and retrieves evidence from clinical guidelines. Reasoning is retrieval-grounded, citation-aware, and intentionally non-prescriptive.
+
+## Stage 4A: System Faithfulness and Grounding Evaluation
+
+We evaluate the trustworthiness of the explanation pipeline prior to LLM integration.
+
+**Faithfulness Evaluation**
+- Verifies alignment between SHAP-identified influential features and retrieved clinical guideline evidence.
+- Ensures that model explanations are supported by domain-relevant medical knowledge.
+
+**Grounding Evaluation**
+- Ensures that all explanatory claims are backed by retrieved guideline text.
+- When no supporting evidence is available, the system explicitly reports insufficient evidence rather than generating unsupported explanations.
+
+This evaluation stage enforces safety, transparency, and auditability of the clinical decision support system before introducing any generative components.

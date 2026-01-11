@@ -1,6 +1,8 @@
 from genai.prompts.clinical_reasoning_prompt import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 from genai.prompts.shap_adapter import format_shap_features
 from genai.retrieval.retrieval_adapter import format_retrieved_chunks
+from typing import Dict, List, Tuple
+
 
 def build_reasoning_prompt(
     risk_score: float,

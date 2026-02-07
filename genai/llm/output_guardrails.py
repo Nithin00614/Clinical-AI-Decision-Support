@@ -18,19 +18,18 @@ def apply_output_guardrails(
     for phrase in FORBIDDEN_PATTERNS:
         if phrase in lowered:
             return {
-                "status": "blocked",
+                "mode": "BLOCKED",
                 "reason": "Unsafe clinical recommendation detected",
-                "final_text": (
-                    "This system cannot provide medical advice. "
-                    "Please consult a qualified healthcare professional."
+                "text": (
+                    "This system cannot provide medical advice.Please consult a qualified healthcare professional."
                 ),
             }
 
     # 2. Mode-based restriction
     if decision_mode == "safe":
         return {
-            "status": "safe_mode",
-            "final_text": (
+            "mode": "SAFE_MODE",
+            "text": (
                 "The system is operating in Safe Observation Mode. "
                 "Automated reasoning is withheld due to uncertainty. "
                 "Human clinical review is required."
@@ -46,6 +45,6 @@ def apply_output_guardrails(
 
     # 4. Normal pass-through
     return {
-        "status": "ok",
-        "final_text": llm_text,
+        "mode": "NORMAL",
+        "text": llm_text,
     }

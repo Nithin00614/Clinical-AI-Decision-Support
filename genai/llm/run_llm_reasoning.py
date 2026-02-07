@@ -23,13 +23,15 @@ def run_llm_stage():
     # 5) output guardrails
     guarded = apply_output_guardrails(
         llm_text=explanation,
-        decision_mode=payload.get("decision_mode", "normal"),
+        decision_mode=payload.get("decision_mode", "NORMAL"),
         confidence=payload.get("confidence"),
     )
 
     return {
         "risk_score": payload["risk_score"],
         "confidence": payload["confidence"],
+        "shap_explanation": payload.get("shap_explanation"),
+        "retrieved_evidence": payload.get("retrieved_evidence"),    
         "explanation": explanation,
         "guarded_output": guarded
     }

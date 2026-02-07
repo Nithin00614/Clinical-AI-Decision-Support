@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent
 # Load FAISS index
 index = faiss.read_index(str(BASE_DIR / "ckd_guidelines.index"))
 
-# Load chunks + metadata
+# Load chunks + metadata (file is in same directory as this script)
 with open(BASE_DIR / "chunks.pkl", "rb") as f:
     store = pickle.load(f)
 

@@ -38,15 +38,6 @@ def predict_patient(input_data: dict):
 
     df = df[expected]
     df = df.reindex(columns=expected, fill_value=0)
-    print("INPUT DF:\n", df)
-    print("PRED:", pipeline.predict_proba(df))
-    print("MODEL LOADED FROM:", MODEL_PATH)
-    print("EXPECTED:", pipeline.feature_names_in_)
-    print("INPUT:", df.columns.tolist())
-    print(pipeline.predict(df))
-    print(pipeline.predict_proba(df))
-    print(pipeline.named_steps["model"].coef_)
-
 
     risk_score = float(pipeline.predict_proba(df)[0][1])
 

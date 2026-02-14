@@ -23,7 +23,7 @@ def decide_mode(confidence: float, retrieval_count: int) -> str:
         return "SAFE"
 
 
-def run_stage_4c():
+def run_stage_4c(input_data: dict, risk_score: float):
     # 1. Load ML + SHAP outputs
     risk_score, shap_features = load_shap_artifacts()
 
@@ -65,7 +65,9 @@ def run_stage_4c():
     payload = {
         "risk_score": round(risk_score, 4),
         "confidence": confidence,
-        "decision_mode": decision_mode,
+        "guarded_output": {
+            "decision_mode": decision_mode,
+        },
         "shap_explanation": shap_explanation,
         "retrieved_evidence": retrieved_evidence,
     }

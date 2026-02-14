@@ -4,6 +4,7 @@ from api.schemas import PatientInput
 
 from genai.evaluation.stage_4c_orchestrator import run_stage_4c
 from genai.llm.run_llm_reasoning import run_llm_stage
+from services1.inference_service import predict_patient
 
 logger = logging.getLogger("clinical-ai-api")
 
@@ -19,20 +20,10 @@ def health():
 
 @router.post("/predict")
 def predict(input: PatientInput):
-    logger.info("Prediction request received")
 
-    try:
-        payload = run_stage_4c()
+    payload = predict_patient(input.dict())
 
-        return {
-            "risk_score": payload.get("risk_score"),
-            "confidence": payload.get("confidence"),
-            "decision_mode": payload.get("decision_mode"),
-        }
-
-    except Exception as e:
-        logger.exception("Prediction pipeline failure")
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+    return payload
 
 
 @router.post("/reason")

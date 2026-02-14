@@ -5,9 +5,9 @@ from genai.llm.output_guardrails import apply_output_guardrails
 from genai.llm.llm_client import GroqLLMClient
 
 
-def run_llm_stage():
+def run_llm_stage(stage4):
     # 1) Get grounded payload (Stage 4C)
-    payload = run_stage_4c()
+    payload = stage4
 
     # 2a) Decide system mode (System Controller)
     decision_mode = decide_mode(payload)
@@ -30,6 +30,7 @@ def run_llm_stage():
     return {
         "risk_score": payload["risk_score"],
         "confidence": payload["confidence"],
+        "decision_mode": "decision_mode",
         "shap_explanation": payload.get("shap_explanation"),
         "retrieved_evidence": payload.get("retrieved_evidence"),    
         "explanation": explanation,

@@ -5,6 +5,7 @@ from api.schemas import PatientInput
 from genai.evaluation.stage_4c_orchestrator import run_stage_4c
 from genai.llm.run_llm_reasoning import run_llm_stage
 from services1.inference_service import predict_patient
+from services1.reasoning_service import run_reasoning
 
 logger = logging.getLogger("clinical-ai-api")
 
@@ -27,26 +28,25 @@ def predict(input: PatientInput):
 
 
 @router.post("/reason")
-def reasoning_api():
+def reasoning_api(payload: PatientInput):
     try:
-        result = run_llm_stage()
+        result = run_reasoning(payload.dict())
 
         return {
             "prediction": {
-                "risk_score": result["risk_score"],
-                "confidence": result["confidence"],
-                "decision_mode": result["guarded_output"]["mode"]
+                "risk_score": result.get("risk_score"),
+                "confidence": result.get("confidence"),
+                "decision_mode": result.get("decision_mode"),
             },
             "explainability": {
                 "shap_explanation": result.get("shap_explanation"),
-                "retrieved_evidence": result.get("retrieved_evidence")
+                "retrieved_evidence": result.get("retrieved_evidence"),
             },
             "reasoning": {
-                "llm_explanation": result["guarded_output"]["text"],
-                "full_explanation": result.get("explanation")
+                "llm_explanation": result.get("explanation"),
+                "full_explanation": result.get("explanation"),
             }
         }
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

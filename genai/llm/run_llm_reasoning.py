@@ -30,7 +30,7 @@ def run_llm_stage(stage4):
     return {
         "risk_score": payload["risk_score"],
         "confidence": payload["confidence"],
-        "decision_mode": "decision_mode",
+        "decision_mode": payload.get("decision_mode"),
         "shap_explanation": payload.get("shap_explanation"),
         "retrieved_evidence": payload.get("retrieved_evidence"),    
         "explanation": explanation,

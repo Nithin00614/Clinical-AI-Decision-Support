@@ -15,6 +15,8 @@ def run_reasoning(input_data: dict):
 
     # attach outputs
     stage4["risk_score"] = pred["risk_score"]
-    stage4["explanation"] = llm_text
+    stage4["explanation"] = llm_text.get("explanation")
+    stage4["guarded_output"] = llm_text.get("guarded_output")
+
 
     return stage4

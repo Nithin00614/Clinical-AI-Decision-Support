@@ -1,11 +1,15 @@
-def decide_mode(payload: dict) -> str:
-    confidence = payload.get("confidence", 0.0)
-    evidence = payload.get("retrieved_evidence", "")
+def decide_mode(payload):
 
-    if confidence < 0.5 or not evidence.strip():
-        return "safe"
+    confidence = payload.get("confidence", 1.0)
+    risk = payload.get("risk_score", 0.5)
 
-    if confidence < 0.75:
-        return "restricted"
+    # SAFE when uncertainty high
+    if risk >= 0.85 or confidence < 0.50:
+        return "SAFE"
 
-    return "normal"
+    # VERBOSE when medium confidence OR borderline risk
+    if 0.40 <= risk < 0.85:
+        return "VERBOSE"
+
+    return "NORMAL"
+

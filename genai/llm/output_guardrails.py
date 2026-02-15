@@ -44,7 +44,12 @@ def apply_output_guardrails(
         )
 
     # 4. Normal pass-through
+
+    short_summary = " ".join(llm_text.split(".")[:2]) + "."
+    short_summary = short_summary[:300]
+
     return {
         "mode": "NORMAL",
-        "text": llm_text,
+        "text": short_summary,     # clinician short explanation
+        "full_text": llm_text      # full reasoning
     }

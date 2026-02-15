@@ -11,12 +11,9 @@ def run_reasoning(input_data: dict):
     stage4 = run_stage_4c(input_data, pred["risk_score"])
 
     # Step-3 LLM reasoning
-    llm_text = run_llm_stage(stage4)
+    llm_result = run_llm_stage(stage4)
 
     # attach outputs
-    stage4["risk_score"] = pred["risk_score"]
-    stage4["explanation"] = llm_text.get("explanation")
-    stage4["guarded_output"] = llm_text.get("guarded_output")
+    llm_result["risk_score"] = pred["risk_score"]
 
-
-    return stage4
+    return llm_result

@@ -1,0 +1,2 @@
+{"timestamp": "2026-02-15T13:32:09.153444", "patient_id": "P1001", "model_risk_score": 0.82, "decision_mode": "SAFE", "clinician_decision": "override", "clinician_notes": "Recent lab Improvements"}
+{"timestamp": "2026-02-15T14:23:37.553258", "patient_id": "P1002", "model_risk_score": 0.9, "decision_mode": "SAFE", "clinician_decision": "override", "clinician_notes": "Recent Lab improvements"}

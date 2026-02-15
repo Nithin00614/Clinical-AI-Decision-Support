@@ -43,8 +43,8 @@ def reasoning_api(payload: PatientInput):
                 "retrieved_evidence": result.get("retrieved_evidence"),
             },
             "reasoning": {
-                "llm_explanation": result.get("guarded_output",{}).get("text"),
-                "full_explanation": result.get("explanation"),
+                "clinician_summary": result.get("clinician_summary"),
+                "full_explanation": result.get("full_explanation"),
             }
         }
     except Exception as e:

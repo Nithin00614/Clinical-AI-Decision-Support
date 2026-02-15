@@ -65,6 +65,7 @@ def run_stage_4c(input_data: dict, risk_score: float):
     payload = {
         "risk_score": round(risk_score, 4),
         "confidence": confidence,
+        "decision_mode": decision_mode,
         "guarded_output": {
             "decision_mode": decision_mode,
         },

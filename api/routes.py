@@ -67,7 +67,7 @@ def clinician_review(payload: ClinicianReview):
         "clinician_notes": payload.clinician_notes
     }
 
-    with open("hitl_audit_log.json", "a") as f:
+    with open("hitl_audit_log.jsonl", "a") as f:
         f.write(json.dumps(log_entry) + "\n")
 
     return {
@@ -99,4 +99,15 @@ def metadata():
         "pipeline_version": "genai_pipeline_v1",
         "llm_provider": "groq",
         "llm_model": "llama-3.1-8b-instant"
+    }
+
+
+@router.get("/system/status")
+def system_status():
+    return {
+        "model": "ready",
+        "retrieval": "ready",
+        "llm": "ready",
+        "hitl": "enabled",
+        "version": "backend-v1-stable"
     }

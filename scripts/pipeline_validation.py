@@ -18,16 +18,8 @@ sample_input = {
 }
 
 
-print("\nSTEP 1 — Raw Input")
-print(sample_input)
 
-print("\nSTEP 2 — Model Prediction")
-pred = predict_patient(sample_input)
-print(pred)
-
-print("\nSTEP 3 — Full Reasoning Pipeline")
 result = run_reasoning(sample_input)
+print("\n ----- FINAL PIPELINE OUTPUT ----- \n")
 print(result)
 
-print("\nSTEP 4 — Final API Payload")
-print(result)

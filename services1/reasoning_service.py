@@ -1,7 +1,12 @@
 from services1.inference_service import predict_patient
 from genai.evaluation.stage_4c_orchestrator import run_stage_4c
 from genai.llm.run_llm_reasoning import run_llm_stage
-from services.hitl_override_service import get_override
+from services1.hitl_override_service import get_override
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("clinical-ai")
 
 def run_reasoning(input_data: dict):
 
@@ -24,6 +29,10 @@ def run_reasoning(input_data: dict):
 
     # attach outputs
     llm_result["risk_score"] = pred["risk_score"]
+
+    logger.info(
+        f"{input_data.get('patient_id')} | risk={llm_result['risk_score']} | conf={llm_result.get('confidence')} | mode={llm_result['decision_mode']} | source={llm_result['decision_source']}"
+    )
 
     return {
         **llm_result,

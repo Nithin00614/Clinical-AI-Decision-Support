@@ -13,6 +13,14 @@ def apply_output_guardrails(
     decision_mode: str,
     confidence: float | None = None,
 ):
+   
+    if not llm_text:
+        return {
+            "mode":"EMPTY",
+            "text":"",
+            "full_text":""
+        }
+
     # 1. Hard safety check
     lowered = llm_text.lower()
     for phrase in FORBIDDEN_PATTERNS:
@@ -21,18 +29,20 @@ def apply_output_guardrails(
                 "mode": "BLOCKED",
                 "reason": "Unsafe clinical recommendation detected",
                 "text": (
-                    "This system cannot provide medical advice.Please consult a qualified healthcare professional."
+                    "Automated therapeutic recommendations are restricted. "
+                    "This output is provided for clinical decision support only. "
+                    "Final treatment decisions must remain clinician-authoritative."
                 ),
             }
 
     # 2. Mode-based restriction
-    if decision_mode == "safe":
+    if decision_mode.upper() == "SAFE":
         return {
             "mode": "SAFE_MODE",
             "text": (
-                "The system is operating in Safe Observation Mode. "
-                "Automated reasoning is withheld due to uncertainty. "
-                "Human clinical review is required."
+                "The system is operating in uncertainty-aware observation mode. "
+                "Automated reasoning is intentionally constrained due to limited confidence. "
+                "Clinical review is recommended before action."
             ),
         }
 

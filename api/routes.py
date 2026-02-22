@@ -37,18 +37,18 @@ def reasoning_api(payload: PatientInput):
 
         return {
             "prediction": {
-                "risk_score": result.get("risk_score"),
-                "confidence": result.get("confidence"),
-                "decision_mode": result.get("decision_mode"),
-                "decision_source": result.get("decision_source") or "MODEL"
+                "risk_score": result["prediction"]["risk_score"],
+                "confidence": result["prediction"]["confidence"],
+                "decision_mode": result["prediction"]["decision_mode"],
+                "decision_source": result["prediction"]["decision_source"]
             },
             "explainability": {
-                "shap_explanation": result.get("shap_explanation"),
-                "retrieved_evidence": result.get("retrieved_evidence"),
+                "shap_explanation": result["explainability"]["shap_explanation"],
+                "retrieved_evidence": result["explainability"]["retrieved_evidence"],
             },
             "reasoning": {
-                "clinician_summary": result.get("clinician_summary"),
-                "full_explanation": result.get("full_explanation"),
+                "clinician_summary": result["reasoning"]["clinician_summary"],
+                "full_explanation": result["reasoning"]["full_explanation"],
             }
         }
     except Exception as e:

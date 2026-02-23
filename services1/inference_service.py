@@ -1,12 +1,16 @@
 import pandas as pd
 import joblib
 from pathlib import Path
+from genai.explainability.shap_loader import explain_instance
 
 # Load trained pipeline
 BASE_DIR = Path(__file__).resolve().parents[1]
 MODEL_PATH = BASE_DIR / "models" / "full_pipeline.pkl"
 
 pipeline = joblib.load(MODEL_PATH)
+preprocessor = pipeline.named_steps["preprocessor"]
+model = pipeline.named_steps["model"]
+
 
 def predict_patient(input_data: dict):
 
@@ -29,18 +33,20 @@ def predict_patient(input_data: dict):
     mapped_input = {FEATURE_MAP[k]: v for k, v in input_data.items()}
     df = pd.DataFrame([mapped_input])
 
+    shap_values, feature_names = explain_instance(df)
 
-    expected = pipeline.feature_names_in_
-
-    for col in expected:
-        if col not in df.columns:
-            df[col] = 0   # fill missing columns safely
-
-    df = df[expected]
-    df = df.reindex(columns=expected, fill_value=0)
+    if shap_values is not None:
+        top_features = dict(
+            sorted(zip(feature_names, shap_values),
+                key=lambda x: abs(x[1]),
+                reverse=True)[:5]
+        )
+    else:
+        top_features = None
 
     risk_score = float(pipeline.predict_proba(df)[0][1])
 
     return {
-        "risk_score": risk_score
+        "risk_score": risk_score,
+        "top_features": top_features
     }

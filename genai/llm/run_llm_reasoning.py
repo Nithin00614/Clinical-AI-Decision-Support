@@ -5,25 +5,35 @@ from genai.llm.output_guardrails import apply_output_guardrails
 from genai.llm.llm_client import GroqLLMClient
 import re
 
-def build_clinician_summary(text: str) -> str:
-    if not text:
+def build_clinician_summary(text: str, payload: dict = None) -> str:
+    if not payload:
         return "Clinical review recommended."
 
-    lines = [l.strip() for l in text.split("\n") if l.strip()]
+    risk = payload.get("risk_score", 0)
+    confidence = payload.get("confidence", 0)
+    shap = payload.get("shap_explanation")
 
-    # remove very long evidence paragraphs
-    lines = [l for l in lines if len(l) < 160]
+    # Severity
+    if risk > 0.8:
+        severity = "High risk of CKD progression."
+    elif risk > 0.5:
+        severity = "Moderate risk of CKD progression."
+    else:
+        severity = "Lower risk of CKD progression."
 
-    summary = " ".join(lines[:3])
+    # Top drivers
+    drivers = ""
+    if shap:
+        drivers = shap
+    else:
+        drivers = "Key contributing clinical factors present."
 
-    # force 2 sentences max
-    sentences = [s.strip() for s in summary.split(".") if s.strip()]
-    summary = ". ".join(sentences[:2])
+    # Uncertainty
+    uncertainty = ""
+    if confidence < 0.6:
+        uncertainty = " Interpret cautiously due to lower confidence."
 
-    if not summary.endswith("."):
-        summary += "."
-
-    return summary
+    return f"{severity} {drivers}.{uncertainty}"
 
 def split_references(text: str):
     lower = text.lower()
@@ -87,7 +97,7 @@ def run_llm_stage(stage4):
 
     else:
         explanation_body, references = split_references(explanation) 
-        clinician_summary = build_clinician_summary(explanation_body)
+        clinician_summary = build_clinician_summary(explanation_body, payload)
 
     original_llm_text = explanation
     if not explanation_body:
@@ -113,12 +123,45 @@ def run_llm_stage(stage4):
     if not explanation_body:
         explanation_body = original_llm_text
 
+    # Explainability health
+    explanation_present = bool(explanation_body and explanation_body.strip())
+
+    shap = payload.get("shap_explanation")
+    shap_present = bool(shap and str(shap).strip() and shap != "None")
+
+    guard_blocked = isinstance(guarded, dict) and guarded.get("mode") in ["BLOCKED", "EMPTY"]
+
+    if guard_blocked or not explanation_present:
+        explainability_status = "unavailable"
+
+    elif explanation_present and shap_present:
+        explainability_status = "available"
+
+    else:
+        explainability_status = "degraded"
+
+
+    if explainability_status == "unavailable":
+        reasoning_confidence = "LOW"
+
+    elif explainability_status == "degraded":
+        reasoning_confidence = "MEDIUM"
+
+    else:
+        reasoning_confidence = "HIGH"
+
+
     reasoning_metadata = {
     "llm_used": True,
+    "llm_fallback": explanation.startswith("System reliability is limited"),
     "evidence_used": bool(payload.get("retrieved_evidence")),
     "shap_used": bool(payload.get("shap_explanation")),
     "guardrail_mode": guarded.get("mode") if isinstance(guarded, dict) else "UNKNOWN",
+    "explainability_status": explainability_status,
+    "reasoning_confidence": reasoning_confidence,
 }
+
+    print("metadata:", reasoning_metadata)
 
     return {
     "risk_score": payload["risk_score"],

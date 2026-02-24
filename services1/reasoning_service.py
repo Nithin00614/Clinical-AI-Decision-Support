@@ -11,11 +11,17 @@ logger = logging.getLogger("clinical-ai")
 def run_reasoning(input_data: dict):
 
     # Step-1 prediction
-    pred = predict_patient(input_data)
-    print("Pred =", pred)
+    ml_output = predict_patient(input_data)
+    logger.info(
+    f"ML → risk={ml_output['risk_score']:.3f} | shap={bool(ml_output.get('shap_features'))}"
+    )
 
+
+    if not ml_output.get("shap_features"):
+        ml_output["shap_features"] = {}
+    
     # Step-2 orchestration
-    stage4 = run_stage_4c(input_data, pred["risk_score"])
+    stage4 = run_stage_4c(input_data=input_data, risk_score=ml_output["risk_score"],shap_features=ml_output.get("shap_features",{}))
 
     # Step-3 LLM reasoning
     llm_result = run_llm_stage(stage4)
@@ -45,14 +51,20 @@ def run_reasoning(input_data: dict):
     if override:
         llm_result["decision_mode"] = override["override_decision"]
         llm_result["decision_source"] = "CLINICIAN_OVERRIDE"
+        stage4["confidence"] = round(stage4["confidence"] * 0.75, 3)
     else:
         llm_result["decision_source"] = "MODEL"
 
     # attach outputs
     llm_result["risk_score"] = stage4["risk_score"]
+    llm_result["confidence"] = stage4["confidence"]
+    llm_result["decision_mode"] = stage4["decision_mode"]
 
     logger.info(
-        f"{input_data.get('patient_id')} | risk={llm_result['risk_score']} | conf={llm_result.get('confidence')} | mode={llm_result['decision_mode']} | source={llm_result['decision_source']}"
+        f"{input_data.get('patient_id')} | "
+        f"risk={stage4['risk_score']:.3f} | "
+        f"conf={stage4['confidence']:.3f} | "
+        f"mode={stage4['decision_mode']}"
     )
 
     return {
@@ -63,8 +75,9 @@ def run_reasoning(input_data: dict):
         "decision_source": llm_result["decision_source"],
     },
     "explainability": {
-        "shap_explanation": llm_result.get("shap_explanation"),
-        "retrieved_evidence": llm_result.get("retrieved_evidence")
+        "shap": stage4.get("shap"),
+        "shap_explanation": stage4.get("shap_explanation"),
+        "retrieved_evidence": stage4.get("retrieved_evidence")
     },
     "reasoning": reasoning
 }

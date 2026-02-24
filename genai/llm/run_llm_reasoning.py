@@ -3,81 +3,21 @@ from genai.llm.llm_prompt_builder import build_llm_prompt
 from genai.controller.system_controller import decide_mode
 from genai.llm.output_guardrails import apply_output_guardrails
 from genai.llm.llm_client import GroqLLMClient
-import re
+from genai.llm.llm_postprocess import (build_clinician_summary, split_references, structure_explanation)
 
-def build_clinician_summary(text: str, payload: dict = None) -> str:
-    if not payload:
-        return "Clinical review recommended."
-
-    risk = payload.get("risk_score", 0)
-    confidence = payload.get("confidence", 0)
-    shap = payload.get("shap_explanation")
-
-    # Severity
-    if risk > 0.8:
-        severity = "High risk of CKD progression."
-    elif risk > 0.5:
-        severity = "Moderate risk of CKD progression."
-    else:
-        severity = "Lower risk of CKD progression."
-
-    # Top drivers
-    drivers = ""
-    if shap:
-        drivers = shap
-    else:
-        drivers = "Key contributing clinical factors present."
-
-    # Uncertainty
-    uncertainty = ""
-    if confidence < 0.6:
-        uncertainty = " Interpret cautiously due to lower confidence."
-
-    return f"{severity} {drivers}.{uncertainty}"
-
-def split_references(text: str):
-    lower = text.lower()
-
-    ref_markers = ["references:", "kdigo", ".pdf", "study", "trial"]
-
-    for marker in ref_markers:
-        idx = lower.find(marker)
-        if idx != -1 and idx > len(text) * 0.4:
-            body = text[:idx]
-            refs = text[idx:]
-            return body.strip(), refs.strip()
-
-    return text.strip(), None
-
-def structure_explanation(text: str) -> str:
-    if not text:
-        return ""
-
-    sections = [
-        "### Risk Interpretation\n",
-        "### Key Contributing Factors\n",
-        "### Clinical Uncertainty\n",
-        "### Suggested Clinical Action\n",
-    ]
-
-    parts = text.split("\n\n")
-
-    structured = ""
-    for i, part in enumerate(parts):
-        if i < len(sections):
-            structured += sections[i] + part + "\n\n"
-        else:
-            structured += part + "\n\n"
-
-    return structured.strip()  
 
 def run_llm_stage(stage4):
     # 1) Get grounded payload (Stage 4C)
-    payload = stage4
+    payload = dict(stage4)
     
     # 2a) Decide system mode (System Controller)
     decision_mode = stage4.get("decision_mode", "NORMAL")
     confidence = stage4.get("confidence", 0.0)
+
+    payload["shap_features"] = payload.get("shap", {})
+    payload["clinical_shap_summary"] = ""
+    payload["shap_mismatch"] = payload.get("shap_mismatch", False)
+    payload["shap_missing_features"] = payload.get("shap_missing_features", [])
 
     # 3) Build LLM prompt
     system_prompt, user_prompt = build_llm_prompt(payload)
@@ -86,6 +26,9 @@ def run_llm_stage(stage4):
     llm = GroqLLMClient()
 
     explanation = llm.generate(system_prompt, user_prompt)
+    if not explanation or not explanation.strip():
+        explanation = "Model produced no explanation. SHAP evidence suggests: " + payload.get("clinical_shap_summary", "")
+
     clinician_summary = ""
     if decision_mode == "SAFE":
         explanation = ("System reliability is limited."
@@ -97,9 +40,17 @@ def run_llm_stage(stage4):
 
     else:
         explanation_body, references = split_references(explanation) 
-        clinician_summary = build_clinician_summary(explanation_body, payload)
+        clinician_summary = build_clinician_summary("", payload)
 
+    # Ensure clinician summary is concise and not SHAP repetition
+    if clinician_summary:
+        clinician_summary = clinician_summary.replace("\n", " ").strip()
+
+        if len(clinician_summary) > 200:
+            clinician_summary = clinician_summary[:200].rsplit(".", 1)[0] + "."
+    
     original_llm_text = explanation
+
     if not explanation_body:
         explanation_body = original_llm_text
 
@@ -110,7 +61,6 @@ def run_llm_stage(stage4):
         decision_mode=decision_mode,
         confidence=confidence,
     )
-
 
     #  SAFE MERGE
     if isinstance(guarded, dict):
@@ -126,25 +76,25 @@ def run_llm_stage(stage4):
     # Explainability health
     explanation_present = bool(explanation_body and explanation_body.strip())
 
-    shap = payload.get("shap_explanation")
-    shap_present = bool(shap and str(shap).strip() and shap != "None")
+    shap_struct = payload.get("shap") or payload.get("shap_features")
+    shap_present = (isinstance(shap_struct,dict) and shap_struct.get("vector_available", False))
 
     guard_blocked = isinstance(guarded, dict) and guarded.get("mode") in ["BLOCKED", "EMPTY"]
 
     if guard_blocked or not explanation_present:
-        explainability_status = "unavailable"
+        explainability_status = "Unavailable"
 
     elif explanation_present and shap_present:
-        explainability_status = "available"
+        explainability_status = "Available"
 
     else:
-        explainability_status = "degraded"
+        explainability_status = "Degraded"
 
 
-    if explainability_status == "unavailable":
+    if explainability_status == "Unavailable":
         reasoning_confidence = "LOW"
 
-    elif explainability_status == "degraded":
+    elif explainability_status == "Degraded":
         reasoning_confidence = "MEDIUM"
 
     else:
@@ -155,14 +105,16 @@ def run_llm_stage(stage4):
     "llm_used": True,
     "llm_fallback": explanation.startswith("System reliability is limited"),
     "evidence_used": bool(payload.get("retrieved_evidence")),
-    "shap_used": bool(payload.get("shap_explanation")),
+    "shap_used": bool(payload.get("shap_features")),
+    "confidence_score": confidence,
+    "decision_mode": decision_mode,
+    "retrieval_used": bool(payload.get("retrieved_evidence")),
     "guardrail_mode": guarded.get("mode") if isinstance(guarded, dict) else "UNKNOWN",
     "explainability_status": explainability_status,
     "reasoning_confidence": reasoning_confidence,
 }
 
     print("metadata:", reasoning_metadata)
-
     return {
     "risk_score": payload["risk_score"],
     "confidence": payload["confidence"],

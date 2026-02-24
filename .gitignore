@@ -7,3 +7,4 @@ data/raw/
 data/processed/
 models/
 genai/data/artifacts/background_sample.csv
+genai/data/artifacts/global_shap_importance.json

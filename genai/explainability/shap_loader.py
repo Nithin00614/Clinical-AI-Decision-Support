@@ -3,6 +3,7 @@ import joblib
 import shap
 import logging
 from pathlib import Path
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,13 @@ model = pipeline.named_steps["model"]
 _background_transformed = None
 _explainer = None
 _feature_names = None
+
+
+def load_expected_features():
+    path = Path("artifacts/expected_features.json")
+    if path.exists():
+        return set(json.loads(path.read_text()))
+    return set()
 
 
 # Lazy background transform
@@ -50,7 +58,7 @@ def get_explainer():
             return None
 
         try:
-            _explainer = shap.LinearExplainer(model, background)
+            _explainer = shap.Explainer(model, background)
         except Exception as e:
             logger.warning(f"SHAP explainer creation failed: {e}")
             _explainer = None
@@ -83,10 +91,23 @@ def explain_instance(df: pd.DataFrame):
         if explainer is None or feature_names is None:
             return None, None
 
-        x = preprocessor.transform(df)
-        shap_values = explainer.shap_values(x)[0]
+        # ALWAYS create X before any checks
+        X = preprocessor.transform(df)
 
-        return shap_values, feature_names
+        background = get_background()
+        if background is None:
+            logger.warning("SHAP skipped — background unavailable")
+            return None, None
+
+        if X.shape[1] != background.shape[1]:
+            logger.warning(
+                f"SHAP skipped — feature mismatch instance={X.shape[1]} background={background.shape[1]}"
+            )
+            return None, None
+
+        shap_values = explainer(X)[0]
+
+        return shap_values.values, feature_names
 
     except Exception as e:
         logger.warning(f"SHAP explanation failed: {e}")

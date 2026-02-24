@@ -1,51 +1,32 @@
 # genai/evaluation/stage_4c_orchestrator.py
-
-from genai.evaluation.load_shap_artifacts import load_shap_artifacts
 from genai.retrieval.retriever import search
 from genai.retrieval.retrieval_adapter import format_retrieved_chunks
 from genai.prompts.shap_adapter import format_shap_features
+from genai.explainability.clinical_shap_translator import translate_shap
+from genai.explainability.shap_formatter import build_structured_shap
+from genai.explainability.clinical_shap_translator import generate_clinical_sentences
+from genai.explainability.shap_loader import load_expected_features
+from genai.evaluation.reasoning_controller import (compute_certainty, decide_mode, detect_explanation_mismatch)
 import logging
 
 
-def compute_confidence(risk_score: float) -> float:
-    """
-    Confidence proxy:
-    Lower confidence near decision boundary (0.5)
-    """
-    return max(0.0, 1 - abs(risk_score - 0.5) * 2)
 
-
-def decide_mode(confidence: float):
-    if confidence < 0.30:
-        return "SAFE"
-    elif confidence < 0.65:
-        return "VERBOSE"
-    else:
-        return "NORMAL"
-
-
-def run_stage_4c(input_data: dict, risk_score: float):
+def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
 
     # SAFETY ASSERTION — risk propagation integrity
     assert isinstance(risk_score, (float, int)), "Risk score must be numeric"
     assert 0.0 <= risk_score <= 1.0, "Risk score out of expected range"
 
-    # 1. Load ML + SHAP outputs
-    try:
-        _, shap_features = load_shap_artifacts() 
-    except Exception:
-        shap_features = {}
+    risk_score = float(risk_score)
+    
 
-    # 2. Confidence tagging (explicit)
-    confidence = float(round(compute_confidence(risk_score), 3))
-
-    # 3. Evidence retrieval
+    # 2. Evidence retrieval
     query = "chronic kidney disease risk factors"
     retrieved = search(query, k=3)
     retrieval_count = len(retrieved)
 
 
-    # 4. Explanation preparation
+    # 3. Explanation preparation
     shap_text = format_shap_features(shap_features)
     if shap_text is None or shap_text.strip() == "":
         shap_text = "SHAP explanation unavailable."
@@ -53,22 +34,31 @@ def run_stage_4c(input_data: dict, risk_score: float):
     shap_explanation: str = shap_text
     retrived_evidence: str = ""
 
-    #Confidence calculation (robust)
 
-    certainty = abs(risk_score - 0.5) * 2
+    shap_features = {k: float(v) for k,v in shap_features.items()}
+    try:
+        structured_shap = build_structured_shap(shap_features)
+    except Exception:
+        structured_shap = {
+            "top_positive": [],
+            "top_negative": [],
+            "vector_available": False
+        }
 
-    shap_signal = 1 if shap_text and "unavailable" not in shap_text.lower() else 0
-    retrieval_signal = 1 if retrieved else 0
+    expected_features = load_expected_features()    
+    missing_features = set(expected_features) - set(shap_features.keys())
+    shap_missing_features = list(missing_features)
+    shap_available = bool(shap_features)
+    shap_mismatch = False
 
-    confidence = 0.7 * certainty + 0.15 * shap_signal + 0.15 * retrieval_signal
 
-    if 0.45 <=risk_score <=0.55:
-        confidence *=0.9
+    print("certainty:", certainty)
+    print("shap_signal:", shap_signal)
+    print("retrieval_signal:", retrieval_signal)
+    print("final confidence:", confidence)
 
-    if shap_signal == 0 and retrieval_signal == 0:
-        confidence *= 0.92
-    confidence = round(confidence, 3)
 
+    logging.info(f"STAGE$ SHAP: {shap_features}")
     decision_mode = decide_mode(confidence)
 
     if decision_mode == "SAFE":
@@ -77,13 +67,14 @@ def run_stage_4c(input_data: dict, risk_score: float):
         )
         
         shap_explanation = (
-            "⚠️ System safety guard triggered. "
-            "Explanation suppressed due to low system reliability. "
-            "Human review recommended."
+            "⚠️ Low confidence prediction.\n"
+            "Top contributing factors are shown for clinician review only:\n\n"
+            + shap_text
         )
         retrieved_evidence = "Evidence retrieval suppressed due to low confidence."
 
     elif decision_mode == "VERBOSE":
+            safe_shap = shap_text or "SHAP unavailable"
 
             shap_explanation = (
                 "⚠️ Moderate confidence detected. "
@@ -95,13 +86,20 @@ def run_stage_4c(input_data: dict, risk_score: float):
 
     else:
         shap_explanation = shap_text
-        retrieved_evidence = format_retrieved_chunks(retrieved)        
+        retrieved_evidence = format_retrieved_chunks(retrieved)          
 
+    
     # 6. Final payload (authoritative)
     payload = {
         "risk_score": round(risk_score, 4),
         "confidence": confidence,
         "decision_mode": decision_mode,
+        "shap": structured_shap,
+        "shap_missing_features": shap_missing_features,
+        "shap_available": shap_available,
+        "shap_mismatch": shap_mismatch,
+        "cinical_factors": clinical_sentences,
+        "explanation_available": structured_shap["vector_available"],
         "guarded_output": {
             "decision_mode": decision_mode,
         },

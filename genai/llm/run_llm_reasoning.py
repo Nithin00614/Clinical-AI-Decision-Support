@@ -1,7 +1,7 @@
 from genai.evaluation.stage_4c_orchestrator import run_stage_4c
 from genai.llm.llm_prompt_builder import build_llm_prompt
 from genai.controller.system_controller import decide_mode
-from genai.llm.output_guardrails import apply_output_guardrails
+from genai.guardrails.output_guardrails import apply_output_guardrails
 from genai.llm.llm_client import GroqLLMClient
 from genai.llm.llm_postprocess import (build_clinician_summary, split_references, structure_explanation)
 
@@ -91,10 +91,10 @@ def run_llm_stage(stage4):
         explainability_status = "Degraded"
 
 
-    if explainability_status == "Unavailable":
+    if guard_blocked or explainability_status == "Unavailable":
         reasoning_confidence = "LOW"
 
-    elif explainability_status == "Degraded":
+    elif decision_mode == "SAFE" or explainability_status == "Degraded":
         reasoning_confidence = "MEDIUM"
 
     else:
@@ -105,16 +105,15 @@ def run_llm_stage(stage4):
     "llm_used": True,
     "llm_fallback": explanation.startswith("System reliability is limited"),
     "evidence_used": bool(payload.get("retrieved_evidence")),
-    "shap_used": bool(payload.get("shap_features")),
+    "shap_used": shap_present,
     "confidence_score": confidence,
     "decision_mode": decision_mode,
     "retrieval_used": bool(payload.get("retrieved_evidence")),
     "guardrail_mode": guarded.get("mode") if isinstance(guarded, dict) else "UNKNOWN",
     "explainability_status": explainability_status,
     "reasoning_confidence": reasoning_confidence,
-}
+    }
 
-    print("metadata:", reasoning_metadata)
     return {
     "risk_score": payload["risk_score"],
     "confidence": payload["confidence"],
@@ -125,7 +124,7 @@ def run_llm_stage(stage4):
     "full_explanation": explanation_body,
     "references": references,
     "reasoning_metadata": reasoning_metadata
-}
+    }
 
 
 

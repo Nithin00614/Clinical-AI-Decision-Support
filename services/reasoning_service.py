@@ -1,7 +1,7 @@
-from services1.inference_service import predict_patient
+from services.inference_service import predict_patient
 from genai.evaluation.stage_4c_orchestrator import run_stage_4c
 from genai.llm.run_llm_reasoning import run_llm_stage
-from services1.hitl_override_service import get_override
+from services.hitl_override_service import get_override
 import logging
 
 

@@ -1,4 +1,4 @@
-from services1.inference_service import predict_patient
+from services.inference_service import predict_patient
 from genai.evaluation.stage_4c_orchestrator import run_stage_4c
 
 def generate_reasoning(input_data: dict):

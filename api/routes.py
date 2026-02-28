@@ -4,8 +4,8 @@ from api.schemas import PatientInput
 
 from genai.evaluation.stage_4c_orchestrator import run_stage_4c
 from genai.llm.run_llm_reasoning import run_llm_stage
-from services1.inference_service import predict_patient
-from services1.reasoning_service import run_reasoning
+from services.inference_service import predict_patient
+from services.reasoning_service import run_reasoning
 from api.schemas_h.hitl_schema import ClinicianReview
 import json
 from datetime import datetime

@@ -7,7 +7,7 @@ def build_clinician_summary(text: str, payload: dict = None) -> str:
     risk = payload.get("risk_score", 0)
     confidence = payload.get("confidence", 0)
 
-    shap = payload.get("shap") or payload.get("shap_features") or {}
+    shap = payload.get("shap") or {}
     top_pos = shap.get("top_positive", [])[:2]
 
     drivers = [f["feature"] for f in top_pos] if top_pos else []

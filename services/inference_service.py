@@ -10,8 +10,16 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 MODEL_PATH = BASE_DIR / "models" / "full_pipeline.pkl"
 
 pipeline = joblib.load(MODEL_PATH)
-preprocessor = pipeline.named_steps["preprocessor"]
-model = pipeline.named_steps["model"]
+
+#  unwrap calibrated model safely
+if hasattr(pipeline, "calibrated_classifiers_"):
+    base_pipeline = pipeline.calibrated_classifiers_[0].estimator
+else:
+    base_pipeline = pipeline
+
+preprocessor = base_pipeline.named_steps["preprocessor"]
+model = base_pipeline.named_steps["model"]
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("clinical-ai")
@@ -48,8 +56,10 @@ def predict_patient(input_data: dict):
     else:
         shap_features = {}
     logger.info(f"SHAP generated: {bool(shap_features)}")
+    bp = base_pipeline.predict_proba
     risk_score = float(pipeline.predict_proba(df)[0][1])
     shap_features = shap_features
+
 
     return {
         "risk_score": risk_score,

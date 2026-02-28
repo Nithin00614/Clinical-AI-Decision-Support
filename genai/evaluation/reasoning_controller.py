@@ -1,6 +1,6 @@
 
 
-def compute_reasoning_confidence(risk_score: float,shap_available: float, retrieval_count: int) -> float:
+def compute_reasoning_confidence(risk_score: float,structured_shap: dict, retrieval_count: int) -> float:
     certainty = abs(risk_score - 0.5) * 2
 
     shap_signal = 1 if structured_shap.get("vector_available",False) else 0
@@ -8,7 +8,7 @@ def compute_reasoning_confidence(risk_score: float,shap_available: float, retrie
 
     confidence = 0.7 * certainty + 0.15 * shap_signal + 0.15 * retrieval_signal
     if 0.45 <=risk_score <=0.55:
-        confidence *=0.9
+        confidence *=0.92
 
     if shap_signal == 0 and retrieval_signal == 0:
         confidence *= 0.92

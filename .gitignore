@@ -1,10 +1,34 @@
-venv/
+# Python
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+
+# Notebooks
 .ipynb_checkpoints/
-.env
+
+# Logs
 *.log
+*.jsonl
+
+# Environment variables
+.env
+
+# Raw & processed data
 data/raw/
 data/processed/
-models/
-genai/data/artifacts/background_sample.csv
-genai/data/artifacts/global_shap_importance.json
+
+# Retrieval artifacts
+genai/retrieval/*.pkl
+genai/retrieval/*.index
+
+# Runtime artifacts
+genai/data/artifacts/*.json
+genai/data/artifacts/*.csv
+
+# IDE
+.vscode/
+.idea/

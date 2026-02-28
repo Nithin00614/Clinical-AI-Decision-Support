@@ -1,12 +1,6 @@
 # genai/llm/output_guardrails.py
+import logging
 
-FORBIDDEN_PATTERNS = [
-    "diagnose",
-    "treatment",
-    "prescribe",
-    "should take",
-    "recommended therapy",
-]
 
 def apply_output_guardrails(
     llm_text: str,
@@ -23,17 +17,41 @@ def apply_output_guardrails(
 
     # 1. Hard safety check
     lowered = llm_text.lower()
-    for phrase in FORBIDDEN_PATTERNS:
-        if phrase in lowered:
-            return {
-                "mode": "BLOCKED",
-                "reason": "Unsafe clinical recommendation detected",
-                "text": (
-                    "Automated therapeutic recommendations are restricted. "
-                    "This output is provided for clinical decision support only. "
-                    "Final treatment decisions must remain clinician-authoritative."
-                ),
-            }
+    directive_words = [
+    "you should",
+    "start",
+    "must take",
+    "begin",
+    "prescribe",
+    "initiate",
+]
+
+    clinical_action_words = [
+        "drug",
+        "medication",
+        "dose",
+        "dosage",
+        "tablet",
+        "therapy",
+        "treatment",
+        "injection",
+    ]
+
+    directive_present = any(w in lowered for w in directive_words)
+    action_present = any(w in lowered for w in clinical_action_words)
+
+    if directive_present and action_present:
+        logging.warning("Guardrail triggered directive therapeutic recommendation")
+        return {
+            "mode": "BLOCKED",
+            "reason": "Directive therapeutic recommendation detected",
+            "text": (
+                "Automated therapeutic recommendations are restricted. "
+                "This system provides clinical decision support only. "
+                "Final treatment decisions must remain clinician-authoritative."
+            ),
+            "full_text": ""
+        }
 
     # 2. Mode-based restriction
     if decision_mode.upper() == "SAFE":

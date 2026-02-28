@@ -1,5 +1,5 @@
-from services1.inference_service import predict_patient
-from services1.reasoning_service import run_reasoning
+from services.inference_service import predict_patient
+from services.reasoning_service import run_reasoning
 
 sample_input = {
     "bp": 120,

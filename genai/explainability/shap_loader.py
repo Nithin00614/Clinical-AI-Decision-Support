@@ -15,9 +15,19 @@ BACKGROUND_PATH = BASE_DIR / "genai" / "data" / "artifacts" / "background_sample
 
 
 # Load pipeline
+# Handle calibrated vs non-calibrated pipeline
+# Handle calibrated vs non-calibrated pipeline
+
 pipeline = joblib.load(MODEL_PATH)
-preprocessor = pipeline.named_steps["preprocessor"]
-model = pipeline.named_steps["model"]
+
+#  unwrap calibrated model safely
+if hasattr(pipeline, "calibrated_classifiers_"):
+    base_pipeline = pipeline.calibrated_classifiers_[0].estimator
+else:
+    base_pipeline = pipeline
+
+preprocessor = base_pipeline.named_steps["preprocessor"]
+model = base_pipeline.named_steps["model"]
 
 
 # Lazy globals

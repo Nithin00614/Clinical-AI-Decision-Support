@@ -15,22 +15,43 @@ FEATURE_NAME_MAP = {
 }
 
 
-def translate_shap(name: str) -> str:
-    return FEATURE_NAME_MAP.get(name, name)
+def normalize(x: str):
+    return (
+        str(x)
+        .strip()
+        .lower()
+        .replace(" ", "")
+        .replace("-", "")
+        .replace("_", "")
+    )
 
+
+def translate_shap(name: str) -> str:
+    if not name:
+        return name
+
+    norm_name = normalize(name)
+
+    for k, v in FEATURE_NAME_MAP.items():
+        if normalize(k) == norm_name:
+            return v
+
+    return name
 
 def generate_clinical_sentences(structured_shap: dict):
     if not structured_shap or not structured_shap.get("vector_available"):
         return []
 
-    sentences = []
+    drivers = []
 
-    for f in structured_shap["top_positive"]:
-        feature = translate_shap(f["feature"])
-        sentences.append(f"{feature} increased CKD risk")
+    for f in structured_shap.get("top_positive", []):
+        drivers.append((f["feature"]))
 
-    for f in structured_shap["top_negative"]:
-        feature = translate_shap(f["feature"])
-        sentences.append(f"{feature} reduced CKD risk")
+    for f in structured_shap.get("top_negative", []):
+        drivers.append((f["feature"]))
 
-    return sentences
+    # remove duplicates while preserving order
+    seen = set()
+    drivers = [x for x in drivers if not (x in seen or seen.add(x))]
+
+    return drivers

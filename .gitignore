@@ -12,12 +12,16 @@ venv/
 
 # Logs
 *.log
+hitl_audit_log.jsonl
 *.jsonl
 
 # Environment variables
 .env
 
 # Raw & processed data
+data/external/
+notebooks/
+genai/data/guidelines
 data/raw/
 data/processed/
 

@@ -1,0 +1,16 @@
+model:
+  path: models/full_pipeline.pkl
+  version: 1.0.0
+
+confidence:
+  base_weight: 0.7
+  shap_weight: 0.15
+  retrieval_weight: 0.15
+
+decision_modes:
+  safe_threshold: 0.45
+  verbose_threshold: 0.75
+
+logging:
+  level: INFO
+

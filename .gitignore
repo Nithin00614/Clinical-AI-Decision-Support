@@ -24,6 +24,8 @@ notebooks/
 genai/data/guidelines
 data/raw/
 data/processed/
+data/processed_uci.csv
+data/Uci_raw.csv
 
 # Retrieval artifacts
 genai/retrieval/*.pkl

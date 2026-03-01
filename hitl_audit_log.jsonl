@@ -1,3 +1,0 @@
-{"timestamp": "2026-02-15T13:32:09.153444", "patient_id": "P1001", "model_risk_score": 0.82, "decision_mode": "SAFE", "clinician_decision": "override", "clinician_notes": "Recent lab Improvements"}
-{"timestamp": "2026-02-15T14:23:37.553258", "patient_id": "P1002", "model_risk_score": 0.9, "decision_mode": "SAFE", "clinician_decision": "override", "clinician_notes": "Recent Lab improvements"}
-{"timestamp": "2026-02-21T07:31:28.168761", "patient_id": "1", "model_risk_score": 0.9999999999958942, "decision_mode": "VERBOSE", "clinician_decision": "HIGH_RISK_OVERRIDE", "clinician_notes": "recent lab improvements"}

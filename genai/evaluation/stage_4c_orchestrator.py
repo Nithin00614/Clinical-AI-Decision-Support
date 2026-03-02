@@ -9,6 +9,7 @@ from genai.explainability.shap_loader import load_expected_features
 from genai.evaluation.reasoning_controller import (compute_reasoning_confidence, decide_mode, detect_explanation_mismatch)
 from genai.data.artifact_loader import load_drift_metrics_safe
 import logging
+import time
 from services.confidence_service import (compute_explainability_reliability, compute_clinician_trust ,compute_explanation_confidence, compute_reasoning_reliability, calibrate_reasoning_confidence)
 
 
@@ -24,11 +25,14 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
 
     # 2. Evidence retrieval
     query = "chronic kidney disease risk factors"
-    retrieved = search(query, k=3)
+    retrieval_latency_ms = 0.0
+    retrieved, retrieval_latency_ms = search(query, k=3)
     retrieval_count = len(retrieved)
 
 
     # 3. Explanation preparation
+    shap_start = 0.0
+    shap_start = time.time()
     shap_features = {k: float(v) for k,v in shap_features.items()}
     # Build structured shap
     try:
@@ -39,6 +43,8 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
             "top_negative": [],
             "vector_available": False
         }
+
+    shap_latency_ms = (time.time() - shap_start) * 1000
 
     # Flatten for formatting (SAFE)
     flat_shap = {
@@ -75,7 +81,7 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
     )
 
     logging.info(f"STAGE$ SHAP: {shap_features}")
-    decision_mode = decide_mode(confidence)
+    decision_mode = decide_mode(confidence, risk_score)
 
 
       # ===== Explainability reliability ====
@@ -159,6 +165,8 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
         "shap_available": structured_shap.get("vector_available", False),
         "shap_mismatch": shap_mismatch,
         "cinical_factors": clinical_sentences,
+        "retrieval_latency_ms": retrieval_latency_ms,
+        "shap_latency_ms": shap_latency_ms,
         "explainability": {
             "reliability": explainability_reliability,
             "confidence": explanation_confidence,

@@ -3,6 +3,7 @@ from genai.evaluation.stage_4c_orchestrator import run_stage_4c
 from genai.llm.run_llm_reasoning import run_llm_stage
 from services.hitl_override_service import get_override
 import logging
+import time
 
 
 logging.basicConfig(level=logging.INFO)
@@ -10,6 +11,7 @@ logger = logging.getLogger("clinical-ai")
 
 def run_reasoning(input_data: dict):
 
+    pipeline_start = time.time()
     # Step-1 prediction
     ml_output = predict_patient(input_data)
     logger.info(
@@ -42,7 +44,7 @@ def run_reasoning(input_data: dict):
     reasoning = {
         "clinician_summary": llm_result.get("clinician_summary", ""),
         "full_explanation": full_exp or "",
-        "references": llm_result.get("references", "")
+        "references": llm_result.get("references", [])
     }
     
 
@@ -67,6 +69,8 @@ def run_reasoning(input_data: dict):
         f"mode={stage4['decision_mode']}"
     )
 
+    total_latency_ms = (time.time() - pipeline_start) * 1000
+
     return {
     "prediction": {
         "risk_score": stage4["risk_score"],
@@ -74,10 +78,29 @@ def run_reasoning(input_data: dict):
         "decision_mode": stage4["decision_mode"],
         "decision_source": llm_result["decision_source"],
     },
+
     "explainability": {
         "shap": stage4.get("shap"),
-        "shap_explanation": stage4.get("shap_explanation"),
-        "retrieved_evidence": stage4.get("retrieved_evidence")
+        "shap_available": stage4.get("shap_available", False),
+        "shap_explanation": llm_result.get("shap_explanation"),
     },
-    "reasoning": reasoning
+
+    "retrieval": {
+        "used": bool(stage4.get("retrieved_evidence")),
+        "evidence": stage4.get("retrieved_evidence") or [],
+    },
+
+    "reasoning": {
+        "clinician_summary": reasoning["clinician_summary"],
+        "full_explanation": reasoning["full_explanation"],
+        "references": reasoning.get("references", []),
+        "metadata": llm_result.get("reasoning_metadata", {}),
+    },
+
+    "system_metrics": {
+    "retrieval_latency_ms": stage4.get("retrieval_latency_ms", 0.0),
+    "shap_latency_ms": stage4.get("shap_latency_ms"),
+    "llm_latency_ms": llm_result.get("llm_latency_ms",0.0),
+    "total_latency_ms": round(total_latency_ms, 2)
+}
 }

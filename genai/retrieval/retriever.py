@@ -1,5 +1,6 @@
 import pickle
 from pathlib import Path
+import time
 
 import faiss
 from sentence_transformers import SentenceTransformer
@@ -29,6 +30,7 @@ def search(query: str, k: int = 5):
     Returns:
         List of (text, metadata) tuples
     """
+    start = time.time()
     q_emb = model.encode([query], normalize_embeddings=True)
     D, I = index.search(q_emb, k)
 
@@ -36,4 +38,6 @@ def search(query: str, k: int = 5):
     for idx in I[0]:
         results.append((chunks[idx], metas[idx]))
 
-    return results
+    latency_ms = (time.time() - start) * 1000    
+
+    return results, latency_ms

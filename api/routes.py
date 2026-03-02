@@ -35,22 +35,7 @@ def reasoning_api(payload: PatientInput):
     try:
         result = run_reasoning(payload.dict())
 
-        return {
-            "prediction": {
-                "risk_score": result["prediction"]["risk_score"],
-                "confidence": result["prediction"]["confidence"],
-                "decision_mode": result["prediction"]["decision_mode"],
-                "decision_source": result["prediction"]["decision_source"]
-            },
-            "explainability": {
-                "shap_explanation": result["explainability"]["shap_explanation"],
-                "retrieved_evidence": result["explainability"]["retrieved_evidence"],
-            },
-            "reasoning": {
-                "clinician_summary": result["reasoning"]["clinician_summary"],
-                "full_explanation": result["reasoning"]["full_explanation"],
-            }
-        }
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

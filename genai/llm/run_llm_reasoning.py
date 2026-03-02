@@ -3,7 +3,8 @@ from genai.llm.llm_prompt_builder import build_llm_prompt
 from genai.controller.system_controller import decide_mode
 from genai.guardrails.output_guardrails import apply_output_guardrails
 from genai.llm.llm_client import GroqLLMClient
-from genai.llm.llm_postprocess import (build_clinician_summary, split_references, structure_explanation)
+from genai.llm.llm_postprocess import (build_clinician_summary, split_references, structure_explanation, extract_references_ids)
+import time
 
 
 def run_llm_stage(stage4):
@@ -25,7 +26,10 @@ def run_llm_stage(stage4):
     # 4) Call real LLM
     llm = GroqLLMClient()
 
+    llm_start = time.time()
+
     explanation = llm.generate(system_prompt, user_prompt)
+    llm_latency_ms = (time.time() - llm_start) * 1000
     if not explanation or not explanation.strip():
         explanation = "Model produced no explanation. SHAP evidence suggests: " + payload.get("clinical_shap_summary", "")
 
@@ -55,6 +59,7 @@ def run_llm_stage(stage4):
         explanation_body = original_llm_text
 
     explanation_body = structure_explanation(explanation_body)
+
      # 5) output guardrails
     guarded = apply_output_guardrails(
         llm_text=explanation_body,
@@ -72,6 +77,10 @@ def run_llm_stage(stage4):
 
     if not explanation_body:
         explanation_body = original_llm_text
+
+    if payload.get("retrieved_evidence"):
+       evidence_text = payload.get("retrieved_evidence") or []
+       references = extract_references_ids(evidence_text)
 
     # Explainability health
     explanation_present = bool(explanation_body and explanation_body.strip())
@@ -123,7 +132,8 @@ def run_llm_stage(stage4):
     "clinician_summary": clinician_summary,
     "full_explanation": explanation_body,
     "references": references,
-    "reasoning_metadata": reasoning_metadata
+    "reasoning_metadata": reasoning_metadata,
+    "llm_latency_ms": llm_latency_ms,
     }
 
 

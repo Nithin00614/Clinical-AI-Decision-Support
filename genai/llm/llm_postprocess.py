@@ -65,3 +65,23 @@ def structure_explanation(text: str) -> str:
             structured += part + "\n\n"
 
     return structured.strip()  
+
+def extract_references_ids(text: str):
+    pattern = r"\[(.*?)\]"
+    matches = re.findall(pattern, text)
+    structured = []
+    seen = set()
+
+    for ref in matches:
+        if "::page_" in ref:
+            doc, page = ref.split("::page_")
+            key = (doc, int(page))
+            if key not in seen:
+                structured.append({
+                    "document": doc,
+                    "page": int(page)
+                })
+                seen.add(key)
+
+    structured = sorted(structured, key=lambda x: (x["document"], x["page"]))
+    return structured

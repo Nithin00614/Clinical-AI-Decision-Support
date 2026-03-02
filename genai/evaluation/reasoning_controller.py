@@ -1,20 +1,24 @@
 
 
 def compute_reasoning_confidence(risk_score: float,structured_shap: dict, retrieval_count: int) -> float:
-    certainty = abs(risk_score - 0.5) * 2
+    certainty = max(0.0, min(1.0, abs(risk_score - 0.5) * 2))
 
     shap_signal = 1 if structured_shap.get("vector_available",False) else 0
     retrieval_signal = 1 if retrieval_count > 0 else 0
 
     confidence = 0.7 * certainty + 0.15 * shap_signal + 0.15 * retrieval_signal
     if 0.45 <=risk_score <=0.55:
-        confidence *=0.92
+        confidence *=0.85
 
     if shap_signal == 0 and retrieval_signal == 0:
-        confidence *= 0.92
+        confidence *= 0.9
     return round(confidence, 3)
 
-def decide_mode(confidence: float):
+def decide_mode(confidence: float, risk_score: float):
+
+    if 0.45 < risk_score <0.55:
+        return "SAFE"
+
     if confidence < 0.30:
         return "SAFE"
     elif confidence < 0.65:

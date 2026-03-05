@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-def chunk_texts(texts, sources, chunk_size=800, chunk_overlap=120):
+def chunk_texts(texts, sources, chunk_size=600, chunk_overlap=60):
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,

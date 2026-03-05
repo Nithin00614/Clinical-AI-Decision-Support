@@ -10,6 +10,7 @@ from genai.evaluation.reasoning_controller import (compute_reasoning_confidence,
 from genai.data.artifact_loader import load_drift_metrics_safe
 import logging
 import time
+from genai.explainability.clinical_shap_translator import extract_driver_features,filter_evidence_by_shap,normalize_drivers
 from services.confidence_service import (compute_explainability_reliability, compute_clinician_trust ,compute_explanation_confidence, compute_reasoning_reliability, calibrate_reasoning_confidence)
 
 
@@ -21,19 +22,12 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
     assert 0.0 <= risk_score <= 1.0, "Risk score out of expected range"
 
     risk_score = float(risk_score)
-    
 
-    # 2. Evidence retrieval
-    query = "chronic kidney disease risk factors"
-    retrieval_latency_ms = 0.0
-    retrieved, retrieval_latency_ms = search(query, k=3)
-    retrieval_count = len(retrieved)
-
-
-    # 3. Explanation preparation
+    # 2. Explanation preparation
     shap_start = 0.0
     shap_start = time.time()
     shap_features = {k: float(v) for k,v in shap_features.items()}
+    
     # Build structured shap
     try:
         structured_shap = build_structured_shap(shap_features)
@@ -65,11 +59,46 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
     except Exception:
         clinical_sentences = []
 
+    drivers_list = extract_driver_features(structured_shap)
+    drivers_list = normalize_drivers(drivers_list)
+
 
     expected_features = load_expected_features()    
     missing_features = set(expected_features) - set(shap_features.keys())
     shap_missing_features = list(missing_features)
     shap_mismatch = False
+
+    # Evidence retrieval
+    query = " ".join(drivers_list) + "chronic kidney disease"
+    retrieval_latency_ms = 0.0
+    retrieved, retrieval_latency_ms = search(query, k=8)
+    retrieval_count = len(retrieved)
+
+    raw_chunks = retrieved
+
+    print("RAW chunks count:", len(raw_chunks))
+    print("RAW chunks sample:", raw_chunks[:1])
+
+    filtered_chunks = filter_evidence_by_shap(raw_chunks, drivers_list)
+
+    if not filtered_chunks:
+        print("NO driver specific evidence found using fallback evidence.")
+        filtered_chunks = raw_chunks[:1]
+
+    print("filtered chunks count:", len(filtered_chunks))
+    print("filtered chunks:", filtered_chunks)
+
+    retrieved_evidence_llm = "\n".join(
+    [c[0] if isinstance(c, tuple) else str(c) for c in filtered_chunks[:2]]
+)
+
+    print(f"Filtered evidence chunks for LLM:\n{retrieved_evidence_llm}")
+
+    print("Drivers list :", drivers_list)
+
+    print(list(set(drivers_list)))
+    print("\n====== evidence sent to llm")
+    print(retrieved_evidence_llm if retrieved_evidence_llm else "NO EVIdence passed")
 
     confidence = compute_reasoning_confidence(risk_score, structured_shap, retrieval_count)
 
@@ -154,8 +183,16 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
         retrieved_evidence = format_retrieved_chunks(retrieved)          
 
 
-   
     # 6. Final payload (authoritative)
+    
+    # Extract text from evidence chunks for reliability computation
+    evidence_text_chunks = []
+    for chunk in filtered_chunks:
+        if isinstance(chunk, tuple):
+            evidence_text_chunks.append(chunk[0])
+        else:
+            evidence_text_chunks.append(chunk)
+    
     payload = {
         "risk_score": round(risk_score, 4),
         "confidence": confidence,
@@ -165,8 +202,11 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
         "shap_available": structured_shap.get("vector_available", False),
         "shap_mismatch": shap_mismatch,
         "cinical_factors": clinical_sentences,
+        "drivers_list": drivers_list,
         "retrieval_latency_ms": retrieval_latency_ms,
+        "model_version": "CKD-Predictor-v1.0",
         "shap_latency_ms": shap_latency_ms,
+        "_evidence_chunks": evidence_text_chunks,
         "explainability": {
             "reliability": explainability_reliability,
             "confidence": explanation_confidence,

@@ -28,10 +28,10 @@ Risk Probability:
 {payload['risk_score']}
 
 Model Explanation (SHAP):
-{payload['shap_explanation']}
+{payload.get("shap_explanation", "")}
 
 Clinical Evidence:
-{payload['retrieved_evidence']}
+{payload.get('retrieved_evidence', [])}
 
 Confidence Score:
 {confidence}

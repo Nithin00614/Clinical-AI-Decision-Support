@@ -23,7 +23,7 @@ metas = store["metas"]
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
-def search(query: str, k: int = 5):
+def search(query: str, k: int = 8):
     """
     Semantic search over CKD guideline chunks.
 

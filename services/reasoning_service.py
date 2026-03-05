@@ -2,8 +2,13 @@ from services.inference_service import predict_patient
 from genai.evaluation.stage_4c_orchestrator import run_stage_4c
 from genai.llm.run_llm_reasoning import run_llm_stage
 from services.hitl_override_service import get_override
+from genai.guardrails.feature_aliignment_guardrail import validate_feature_alignment
+from genai.evaluation.traceability import compute_driver_evidence_traceability
+from genai.evaluation.explanation_coverage import compute_explanation_coverage
+from genai.evaluation.reliability_score import compute_explanation_reliability
 import logging
 import time
+import json
 
 
 logging.basicConfig(level=logging.INFO)
@@ -28,14 +33,53 @@ def run_reasoning(input_data: dict):
     # Step-3 LLM reasoning
     llm_result = run_llm_stage(stage4)
 
-    # Attach LLM reasoning outputs
-    
     full_exp = (
     llm_result.get("full_explanation")
     or llm_result.get("explanation")
     or llm_result.get("analysis")
     or llm_result.get("text")
-)
+    )
+
+    explanation = full_exp or ""
+
+    drivers_list = stage4.get("drivers_list", [])
+
+    # Use raw evidence chunks for reliability computation
+    evidence = stage4.get("_evidence_chunks", [])
+
+    traceability = compute_driver_evidence_traceability(drivers_list, evidence)
+
+    coverage = compute_explanation_coverage(explanation, drivers_list)
+
+    reliability_score, reliability_label = compute_explanation_reliability(
+        traceability,
+        coverage
+    )
+
+    # Attach LLM reasoning outputs
+
+    llm_result["explanation_reliability"] = {
+    "score": round(reliability_score, 3),
+    "level": reliability_label,
+    "traceability": traceability,
+    "coverage": coverage
+    }
+
+    if reliability_label == "LOW":
+        llm_result["decision_mode"] = "SAFE"
+
+    aligned, offending = validate_feature_alignment(full_exp, drivers_list)
+
+    if not aligned:
+        llm_result["decision_mode"] = "SAFE"
+        llm_result["reasoning_validation"] = {
+            "aligned": False,
+            "offending_term": offending
+        }
+    else:
+        llm_result["reasoning_validation"] = {
+            "aligned": True
+        }
 
     # handle structured guardrail output
     if isinstance(full_exp, dict):
@@ -57,10 +101,25 @@ def run_reasoning(input_data: dict):
     else:
         llm_result["decision_source"] = "MODEL"
 
+    audit_entry = {
+    "patient_id": input_data.get("patient_id"),
+    "risk_score": stage4.get("risk_score"),
+    "confidence": stage4.get("confidence"),
+    "decision_mode": llm_result.get("decision_mode"),
+    "explanation_reliability": llm_result.get("explanation_reliability"),
+    "traceability": llm_result.get("explanation_reliability", {}).get("traceability"),
+    "coverage": llm_result.get("explanation_reliability", {}).get("coverage"),
+    "timestamp": time.time()
+}
+
+    with open("hitl_audit_log.jsonl", "a") as f:
+        f.write(json.dumps(audit_entry) + "\n")    
+
     # attach outputs
     llm_result["risk_score"] = stage4["risk_score"]
     llm_result["confidence"] = stage4["confidence"]
     llm_result["decision_mode"] = stage4["decision_mode"]
+    llm_result["explainabilty_status"] = llm_result["reasoning_metadata"]["explainability_status"]
 
     logger.info(
         f"{input_data.get('patient_id')} | "
@@ -77,12 +136,14 @@ def run_reasoning(input_data: dict):
         "confidence": stage4["confidence"],
         "decision_mode": stage4["decision_mode"],
         "decision_source": llm_result["decision_source"],
+        "model_version": stage4.get("model_version", "UNKNOWN")
     },
 
     "explainability": {
         "shap": stage4.get("shap"),
         "shap_available": stage4.get("shap_available", False),
         "shap_explanation": llm_result.get("shap_explanation"),
+        "explainability_status": llm_result.get("explainability_status"),
     },
 
     "retrieval": {
@@ -95,6 +156,7 @@ def run_reasoning(input_data: dict):
         "full_explanation": reasoning["full_explanation"],
         "references": reasoning.get("references", []),
         "metadata": llm_result.get("reasoning_metadata", {}),
+        "explanation_reliability": llm_result.get("explanation_reliability", {}),
     },
 
     "system_metrics": {

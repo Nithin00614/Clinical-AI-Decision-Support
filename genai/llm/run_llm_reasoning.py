@@ -80,24 +80,34 @@ def run_llm_stage(stage4):
 
     if payload.get("retrieved_evidence"):
        evidence_text = payload.get("retrieved_evidence") or []
-       references = extract_references_ids(evidence_text)
+       # Join list of evidence strings into a single string for reference extraction
+       evidence_string = " ".join(evidence_text) if isinstance(evidence_text, list) else evidence_text
+       references = extract_references_ids(evidence_string)
 
     # Explainability health
     explanation_present = bool(explanation_body and explanation_body.strip())
 
-    shap_struct = payload.get("shap") or payload.get("shap_features")
-    shap_present = (isinstance(shap_struct,dict) and shap_struct.get("vector_available", False))
+    shap_struct = payload.get("shap") or {}
+    vector_available = shap_struct.get("vector_available", False)
+    top_pos = shap_struct.get("top_positive", []) 
+    top_neg = shap_struct.get("top_negative", []) 
+    shap_explanation = payload.get("shap_explanation") or ""
+
+    shap_present = bool(vector_available or top_pos or top_neg)
+
+    driver_list = [d["feature"] for d in top_pos + top_neg]
 
     guard_blocked = isinstance(guarded, dict) and guarded.get("mode") in ["BLOCKED", "EMPTY"]
 
-    if guard_blocked or not explanation_present:
+    if guard_blocked:
         explainability_status = "Unavailable"
 
-    elif explanation_present and shap_present:
+    elif shap_present:
         explainability_status = "Available"
-
-    else:
+    elif explanation_present:
         explainability_status = "Degraded"
+    else:
+        explainability_status = "Unavailable"
 
 
     if guard_blocked or explainability_status == "Unavailable":
@@ -109,15 +119,17 @@ def run_llm_stage(stage4):
     else:
         reasoning_confidence = "HIGH"
 
+    retrieved = payload.get("retrieved_evidence")
+    retrieved_failed = payload.get("retrieval_failed", False)
 
     reasoning_metadata = {
     "llm_used": True,
     "llm_fallback": explanation.startswith("System reliability is limited"),
-    "evidence_used": bool(payload.get("retrieved_evidence")),
+    "evidence_used": bool(retrieved),
     "shap_used": shap_present,
     "confidence_score": confidence,
     "decision_mode": decision_mode,
-    "retrieval_used": bool(payload.get("retrieved_evidence")),
+    "retrieval_failed": retrieved_failed,
     "guardrail_mode": guarded.get("mode") if isinstance(guarded, dict) else "UNKNOWN",
     "explainability_status": explainability_status,
     "reasoning_confidence": reasoning_confidence,
@@ -129,6 +141,7 @@ def run_llm_stage(stage4):
     "decision_mode": decision_mode,
     "shap_explanation": payload.get("shap_explanation"),
     "retrieved_evidence": payload.get("retrieved_evidence"),
+    "model_version": payload.get("model_version"),
     "clinician_summary": clinician_summary,
     "full_explanation": explanation_body,
     "references": references,

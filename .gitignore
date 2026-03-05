@@ -31,6 +31,7 @@ data/Uci_raw.csv
 genai/retrieval/*.pkl
 genai/retrieval/*.index
 
+
 # Runtime artifacts
 genai/data/artifacts/*.json
 genai/data/artifacts/*.csv

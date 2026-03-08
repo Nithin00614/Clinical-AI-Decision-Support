@@ -10,6 +10,9 @@ from genai.evaluation.reasoning_controller import (compute_reasoning_confidence,
 from genai.data.artifact_loader import load_drift_metrics_safe
 import logging
 import time
+from genai.evaluation.explanation_coverage import compute_explanation_coverage
+from genai.evaluation.traceability import compute_driver_evidence_traceability
+from genai.evaluation.reliability_score import compute_explanation_reliability
 from genai.explainability.clinical_shap_translator import extract_driver_features,filter_evidence_by_shap,normalize_drivers
 from services.confidence_service import (compute_explainability_reliability, compute_clinician_trust ,compute_explanation_confidence, compute_reasoning_reliability, calibrate_reasoning_confidence)
 
@@ -22,6 +25,16 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
     assert 0.0 <= risk_score <= 1.0, "Risk score out of expected range"
 
     risk_score = float(risk_score)
+    display_risk_score = min(risk_score, 0.99)
+
+    risk_label = "None"
+
+    if risk_score < 0.30:
+        risk_label = "LOW"
+    elif risk_score < 0.70:
+        risk_label = "MODERATE"
+    else:
+        risk_label = "HIGH"
 
     # 2. Explanation preparation
     shap_start = 0.0
@@ -69,36 +82,25 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
     shap_mismatch = False
 
     # Evidence retrieval
-    query = " ".join(drivers_list) + "chronic kidney disease"
+    query = " ".join(drivers_list) 
     retrieval_latency_ms = 0.0
     retrieved, retrieval_latency_ms = search(query, k=8)
     retrieval_count = len(retrieved)
 
     raw_chunks = retrieved
 
-    print("RAW chunks count:", len(raw_chunks))
-    print("RAW chunks sample:", raw_chunks[:1])
+   
 
     filtered_chunks = filter_evidence_by_shap(raw_chunks, drivers_list)
 
     if not filtered_chunks:
-        print("NO driver specific evidence found using fallback evidence.")
-        filtered_chunks = raw_chunks[:1]
+        filtered_chunks = raw_chunks[:2]
 
-    print("filtered chunks count:", len(filtered_chunks))
-    print("filtered chunks:", filtered_chunks)
 
     retrieved_evidence_llm = "\n".join(
     [c[0] if isinstance(c, tuple) else str(c) for c in filtered_chunks[:2]]
 )
 
-    print(f"Filtered evidence chunks for LLM:\n{retrieved_evidence_llm}")
-
-    print("Drivers list :", drivers_list)
-
-    print(list(set(drivers_list)))
-    print("\n====== evidence sent to llm")
-    print(retrieved_evidence_llm if retrieved_evidence_llm else "NO EVIdence passed")
 
     confidence = compute_reasoning_confidence(risk_score, structured_shap, retrieval_count)
 
@@ -195,6 +197,9 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
     
     payload = {
         "risk_score": round(risk_score, 4),
+        "display_risk_score": display_risk_score,
+        "probability_type": "calibrated_estimate",
+        "risk_label": risk_label,
         "confidence": confidence,
         "decision_mode": decision_mode,
         "shap": structured_shap,

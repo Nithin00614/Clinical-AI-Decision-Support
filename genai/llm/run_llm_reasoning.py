@@ -15,10 +15,15 @@ def run_llm_stage(stage4):
     decision_mode = stage4.get("decision_mode", "NORMAL")
     confidence = stage4.get("confidence", 0.0)
 
+
+    payload["risk_score"] = stage4.get("risk_score")
+    payload["display_risk_score"] = stage4.get("display_risk_score")
+    payload["risk_label"] = stage4.get("risk_label")
     payload["shap_features"] = payload.get("shap", {})
     payload["clinical_shap_summary"] = ""
     payload["shap_mismatch"] = payload.get("shap_mismatch", False)
     payload["shap_missing_features"] = payload.get("shap_missing_features", [])
+
 
     # 3) Build LLM prompt
     system_prompt, user_prompt = build_llm_prompt(payload)
@@ -29,6 +34,7 @@ def run_llm_stage(stage4):
     llm_start = time.time()
 
     explanation = llm.generate(system_prompt, user_prompt)
+
     llm_latency_ms = (time.time() - llm_start) * 1000
     if not explanation or not explanation.strip():
         explanation = "Model produced no explanation. SHAP evidence suggests: " + payload.get("clinical_shap_summary", "")

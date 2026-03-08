@@ -159,8 +159,6 @@ def filter_evidence_by_shap(evidence_chunks, drivers):
         else:
             drivers_norm.append(key)
 
-    print("drivers_norm:", drivers_norm)        
-
     filtered = []
 
     for chunk in evidence_chunks:

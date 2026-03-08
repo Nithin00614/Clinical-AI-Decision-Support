@@ -45,25 +45,62 @@ def split_references(text: str):
     return text.strip(), None
 
 def structure_explanation(text: str) -> str:
+    """
+    Parse and preserve the LLM's strict output template structure.
+    The LLM is prompted to return sections with these headers:
+    - Risk Interpretation:
+    - Key Contributing Factors:
+      - Risk Increasing Drivers:
+      - Risk Reducing Drivers:
+    - Clinical Uncertainty:
+    - Potential Clinical Considerations:
+    - References:
+    
+    This function preserves that structure and formats it for UI rendering.
+    """
     if not text:
         return ""
 
-    sections = [
-        "### Risk Interpretation\n",
-        "### Key Contributing Factors\n",
-        "### Clinical Uncertainty\n",
-        "### Suggested Clinical Action\n",
+    # Check if text already has the structured template headers
+    expected_headers = [
+        "Risk Interpretation:",
+        "Key Contributing Factors:",
+        "Clinical Uncertainty:",
+        "Potential Clinical Considerations:",
+        "References:"
     ]
-
-    parts = text.split("\n\n")
-
-    structured = ""
-    for i, part in enumerate(parts):
-        if i < len(sections):
-            structured += sections[i] + part + "\n\n"
-        else:
-            structured += part + "\n\n"
-
+    
+    has_structure = any(header in text for header in expected_headers)
+    
+    if not has_structure:
+        # If LLM didn't follow template, add markdown headers to free-form text
+        # and split into logical parts
+        parts = text.split("\n\n")
+        structured = ""
+        
+        if len(parts) > 0:
+            structured += "### Risk Interpretation\n\n" + parts[0] + "\n\n"
+        
+        if len(parts) > 1:
+            structured += "### Key Contributing Factors\n\n" + parts[1] + "\n\n"
+        
+        if len(parts) > 2:
+            structured += "### Clinical Uncertainty\n\n" + parts[2] + "\n\n"
+        
+        if len(parts) > 3:
+            structured += "### Additional Context\n\n" + "\n\n".join(parts[3:]) + "\n\n"
+        
+        return structured.strip()
+    
+    # If LLM followed template, convert plain text headers to markdown for UI
+    structured = text.replace("Risk Interpretation:", "### Risk Interpretation")
+    structured = structured.replace("Key Contributing Factors:", "### Key Contributing Factors")
+    structured = structured.replace("Risk Increasing Drivers:", "**Risk Increasing Drivers:**")
+    structured = structured.replace("Risk Reducing Drivers:", "**Risk Reducing Drivers:**")
+    structured = structured.replace("Clinical Uncertainty:", "### Clinical Uncertainty")
+    structured = structured.replace("Potential Clinical Considerations:", "### Potential Clinical Considerations")
+    structured = structured.replace("References:", "### References")
+    
     return structured.strip()  
 
 def extract_references_ids(text: str):

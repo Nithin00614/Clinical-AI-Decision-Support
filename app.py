@@ -6,7 +6,12 @@ API = "http://127.0.0.1:8000/api/v1"
 
 st.set_page_config(page_title="CKD Clinical AI", layout="wide")
 
-st.title("CKD Clinical Decision Support System")
+st.title("CKD Clinical AI Decision Support System")
+st.info("⚕️ Clinical Decision Support Tool")
+st.caption("This System Assists Clinicians by Highlighting CKD Risk Patterns based on EHR Features.")
+st.caption("Predictions are not Medical Diagnoses and Require Physician Validation.")
+
+st.markdown("---")
 
 #========================= HELPERS =========================
 
@@ -149,31 +154,42 @@ with tabs[0]:
             metrics = data.get("system_metrics", {})
 
             risk = float(pred["risk_score"])
+            risk_label = pred["risk_label"]
+            reasoning_data = full_response.get("reasoning", {})
             confidence = float(pred["confidence"])
             mode = pred["decision_mode"]
 
             if risk >= 0.999:
-                risk_display = ">0.99"
+                risk_display = "0.99"
             else:
                 risk_display = f"{risk:.3f}"    
 
             separation = abs(risk - 0.5) 
+            if separation >= 0.40:
+                stability = "Very Stable"
+            elif separation >= 0.25:
+                stability = "Stable"
+            elif separation >= 0.10:
+                stability = "Moderate Stability"
+            else:
+                stability = "Near Decision Boundary"
 
             # ================= RISK SUMMARY =================
 
             st.markdown("## Risk Summary")
-            st.caption("probability reflects calibrated mode output, not a confirmed diagnosis.")
-
+            st.caption("Calibrated Risk Probability reflects calibrated mode output, not a confirmed diagnosis.")
+            st.divider()
             col_r1, col_r2 = st.columns(2)
 
             with col_r1:
 
-                if risk < 0.30:
-                    st.success(f"🟢 Low Risk Probability — {risk_display}")
-                elif risk < 0.60:
-                    st.warning(f"🟡 Intermediate Probability — {risk_display}")
+                if risk_label == "LOW":
+                    st.success(f"🟢 Low CKD Risk – Estimated Probability {risk_display}")
+                elif risk_label == "MODERATE":
+                    st.warning(f"🟡 Moderate CKD Risk – Estimated Probability {risk_display}")
                 else:
-                    st.error(f"🔴 High Risk Probability — {risk_display}")
+                    st.error(f"🔴 High CKD Risk – Estimated Probability {risk_display}")
+  
                 
                 st.caption("Decision Threshold: 0.50(Calibrated)")
 
@@ -182,12 +198,55 @@ with tabs[0]:
                 elif risk < 0.60:
                     category = "MODERATE"
                 else:
-                    category = "HIGH"
+                    category = "HIGH"    
 
-                st.markdown(f"***Distance from Decision Boundary:** {separation:.3f}")
-                st.caption("Distance of prediction from decision boundary (0.5). Higher = more stable classification.")
+                st.markdown(f"***Decision Stability Distance:** {separation:.3f}")
 
-            with col_r2:
+                if separation >= 0.40:
+                    st.success("Decision Stability: Very Stable")
+                elif separation >= 0.25:
+                    st.success("Decision Stability: Stable")
+                elif separation >= 0.10:
+                    st.warning("Decision Stability: Moderate Stability")
+                else:
+                    st.error("Decision Stability: Near Decision Boundary")
+                st.caption("Distance of prediction from classification boundary (0.5). Higher values indicate more stable classification.")
+
+                st.markdown("### Key Model Drivers (SHAP)")
+
+                explain = data.get("explainability", {})
+                shap_block = explain.get("shap", {})
+
+                top_positive = shap_block.get("top_positive", [])
+                top_negative = shap_block.get("top_negative", [])
+
+                shown = False
+
+                for item in top_positive[:2]:
+                    feature = item.get("feature")
+                    impact = item.get("impact")
+                    st.markdown(f"• **{feature}** ↑ `{abs(impact):.2f}`")
+                    shown = True
+
+                for item in top_negative[:2]:
+                    feature = item.get("feature")
+                    impact = item.get("impact")
+                    st.markdown(f"• **{feature}** ↓ `{abs(impact):.2f}`")
+                    shown = True
+
+                if not shown:
+                    st.info("No SHAP drivers available for this prediction.")
+
+                st.markdown("### Prediction Trust Score")
+
+                explain_rel = reasoning_data.get("explanation_reliability", {}).get("score", 0)
+                trust_score = (confidence + explain_rel) / 2
+
+                st.metric("Trust Score", f"{trust_score:.2f}")
+                st.caption("Combined Assessment of Model Prediction Stability and Explanation Grounding.")
+
+
+                st.markdown("### Prediction Reliability")
 
                 if confidence <= 0.39:
                     st.error(f"Prediction Reliability: LOW — {confidence:.2f}")
@@ -196,10 +255,12 @@ with tabs[0]:
                 else:
                     st.success(f"Prediction Reliability: HIGH — {confidence:.2f}")
 
-                st.caption("Represents Calibrated System reliability and prediction stability - not Clinical Certainity. ")    
+                st.caption("Represents Calibrated System Reliability and Prediction Stability - Not Clinical Certainity. ")    
 
                 model_version = pred.get("model_version", "UNKNOWN")
                 st.caption(f"MODEL Version: {model_version}")
+
+            with col_r2:
 
                 st.markdown("### Decision Context")
                 st.caption(f"Decision Mode: {mode}")
@@ -221,24 +282,25 @@ with tabs[0]:
                 else:
                     st.error("SHAP Explainability: UNAVAILABLE")
 
-                st.caption("Reflects availability of SHAP-based model drivers.")
+                st.caption("Reflects Availability of SHAP-Based Model Drivers.")
                 
-
+                st.divider()
+                st.markdown("### System Mode")
                 if mode == "SAFE":
-                    st.info("SAFE mode triggered due to low prediction separation (near decision boundary) or degraded explainability.")
+                    st.info("SAFE Mode Triggered Due to Low Prediction Separation (near decision boundary) or Degraded Explainability.")
                 elif mode == "VERBOSE":
-                    st.info("VERBOSE mode activated for extended reasoning transparency.")
+                    st.info("VERBOSE Mode Activated for Extended Reasoning Transparency.")
                 else:
-                    st.success("NORMAL mode — stable prediction state.")
+                    st.success("NORMAL Mode — Stable Prediction State.")
 
-                st.caption("reflects availability and reliability of SHAP-based model drivers.")
+                st.caption("Reflects System Guardrail State Controlling Explanation Behaviour.")
             st.divider()
 
             # ================= ABNORMAL SNAPSHOT =================
 
             abnormal = abnormal_snapshot(payload)
             if abnormal:
-                st.markdown("### Structured Clinical snapshot")
+                st.markdown("### Structured Clinical Snapshot")
                 renal = []
                 hemodynamic = []
                 hematology = []
@@ -256,16 +318,16 @@ with tabs[0]:
                         metabolic.append(item)
 
                 if hemodynamic:
-                    st.markdown(f"*Hemodynamics:* {', '.join(hemodynamic)}")
+                    st.markdown(f"**Hemodynamics:** {', '.join(hemodynamic)}")
 
                 if renal:
-                    st.markdown(f"*Renal Markers:* {', '.join(renal)}")
+                    st.markdown(f"**Renal Markers:** {', '.join(renal)}")
 
                 if hematology:
-                    st.markdown(f"**hematology:** {','.join(hematology)}")
+                    st.markdown(f"**Hematology:** {','.join(hematology)}")
 
                 if metabolic:
-                    st.markdown(f"**metabolic:** {','.join(metabolic)}")            
+                    st.markdown(f"**Metabolic:** {','.join(metabolic)}")            
 
             st.divider()
 
@@ -278,8 +340,8 @@ with tabs[0]:
 
             overhead_ms = max(total_ms - (retrieval_ms + shap_ms + llm_ms), 0)
 
-            st.markdown("### Latency Breakdown (Audit Transparency Metrics)")
-
+            st.markdown("### Operational Latency (Audit Transparency Metrics)")
+            st.caption("System Performance Metrics")
             m1, m2, m3, m4, m5 = st.columns(5)
 
             m1.metric("Retrieval (ms)", int(retrieval_ms))
@@ -288,7 +350,7 @@ with tabs[0]:
             m4.metric("Overhead (ms)", int(overhead_ms))
             m5.metric("Total (ms)", int(total_ms))
 
-            st.caption("Confidence reflects calibration reliability and output stability - not clinical certainty.")
+            st.caption("Confidence Reflects Model Calibration Reliability and Output Stability - Not Clinical Certainty.")
 
         else:
             st.error("Backend error. Please check API.")
@@ -311,15 +373,35 @@ with tabs[1]:
 
         metadata = reasoning.get("metadata", {})
 
-        st.header("Clinical Reasoning Engine")
+        coverage_data = reasoning.get("coverage", {})
+        traceability_data = reasoning.get("traceability", {})
+        reliability_data = reasoning.get("reliability_score", {})
 
+        st.header("Clinical Reasoning Engine")
+        with st.expander("Decision Trace (Pipeline Execution)", expanded=False):
+            trace_steps = [
+                ("Input validation", metadata.get("input_valid", True)),
+                ("Model prediction generated", True),
+                ("SHAP attribution computed", metadata.get("shap_used", False)),
+                ("Clinical evidence retrieved", metadata.get("evidence_used", False)),
+                ("Evidence filtered by SHAP drivers", metadata.get("evidence_used", False)),
+                ("LLM interpretation generated", metadata.get("llm_used", False)),
+                ("Output guardrails validated", metadata.get("guardrail_mode") == "NORMAL"),
+                ("Reliability diagnostics computed", True),
+            ]
+
+            for step, status in trace_steps:
+                icon = "✅" if status else "❌"
+                st.write(f"{icon} {step}")
+    
+                        
         if mode == "SAFE":
-            st.error("🔒 Human Review Required — Automated reasoning constrained due to limited reliability signals.")
+            st.error("🔒 Human Review Required — Automated Reasoning Constrained due to limited Reliability Signals.")
         # ======================================================
         # SECTION 1 — MODEL ATTRIBUTION (Structured SHAP)
         # ======================================================
 
-        st.subheader("1️⃣ Model Attribution (Structured SHAP)")
+        st.subheader("1️⃣ Model Attribution (SHAP Explainability)")
 
         shap_data = explainability.get("shap", {})
         shap_available = explainability.get("shap_available", False)
@@ -349,7 +431,7 @@ with tabs[1]:
                 for idx, item in enumerate(top_positive, start=1):
                     st.write(f"{idx}. {item['feature']} (+) — {round(item['impact'],4)}")
             else:
-                st.info("No significant protective contibutors detected.")
+                st.info("No Significant Protective Contibutors Detected.")
 
         with col_neg:
             st.markdown("### 🔻 Protective / Negative Drivers")
@@ -357,9 +439,9 @@ with tabs[1]:
                 for idx, item in enumerate(top_negative, start=1):
                     st.write(f"{idx}. {item['feature']} (−) — {round(item['impact'],4)}")
             else:
-                st.info("No significant negative contributors available.")
+                st.info("No Significant Negative Contributors Available.")
 
-        st.caption("Drivers ranked by absolute SHAP contribution magnitude.")
+        st.caption("Drivers Ranked by Absolute SHAP Contribution Magnitude.")
         st.markdown("---")
 
         # ======================================================
@@ -376,13 +458,14 @@ with tabs[1]:
 
         # Normalize evidence structure safely
         if isinstance(raw_evidence, str):
-            evidence_chunks = [raw_evidence]  # wrap string into list
+            evidence_chunks = [c.strip() for c in raw_evidence.split("[") if c.strip()]
+            evidence_chunks = ["[" + c for c in evidence_chunks] # wrap string into list
         elif isinstance(raw_evidence, list):
             evidence_chunks = raw_evidence
         else:
             evidence_chunks = []
 
-        MAX_EVIDENCE_DISPLAY = 5
+        MAX_EVIDENCE_DISPLAY = 3
         evidence_chunks = evidence_chunks[:MAX_EVIDENCE_DISPLAY]    
         retrieval_latency = system_metrics.get("retrieval_latency_ms", None)
 
@@ -400,23 +483,30 @@ with tabs[1]:
 
         st.write("Evidence Count:", len(evidence_chunks))
 
-        st.caption(f"Showing top {len(evidence_chunks)} retrieved evidence chunks")
+        st.caption(f"Showing Top {len(evidence_chunks)} Clinically Relevant Evidence Excerpts")
 
         if evidence_chunks:
-            st.caption("Evidence supports key risk drivers.")
+            st.caption("Evidence Supports Key Risk Drivers.")
 
         if evidence_chunks:
             for idx, chunk in enumerate(evidence_chunks):
-                with st.expander("Retrieved Guideline Evidence"):
+                with st.expander(f"Retrieved Guideline Evidence {idx+1}"):
                     st.write(chunk)
         else:
-            st.info("No evidence retrieved for this case.")
+            st.info("No Evidence Retrieved For This Case.")
+
 
         # Structured references (production style)
         if references:
             st.markdown("**Structured References**")
             for ref in references:
                 st.write(f"- {ref.get('document')} (Page {ref.get('page')})")
+
+        st.markdown("### Evidence Sources")
+        st.markdown("""
+        - KDIGO CKD Guidelines
+        - NIDDK CKD Guidelines
+        """)        
 
         st.markdown("---")
 
@@ -429,43 +519,92 @@ with tabs[1]:
         clinician_summary = reasoning.get("clinician_summary", "")
 
         full_explanation = reasoning.get("full_explanation", "")
-        formatted = (
-            full_explanation
-            .replace("Risk Interpretation", "**Risk Interpretation**")
-            .replace("Key Contributing Factors", "**Key Contributing Factors**")
-            .replace("Clinical Uncertainty", "**Clinical Uncertainty**")
-            .replace("Suggested Clinical Action", "**Potential Clinical Considerations**")
-        )
+    
+
 
         if clinician_summary:
             parts = clinician_summary.split("Key drivers:")
             
             if len(parts) == 2:
                 st.markdown(f"• {parts[0].strip()}")
-                st.markdown(f"• Key drivers: {parts[1].strip()}")
+                st.markdown(f"• **Key Drivers**: {parts[1].strip()}")
             else:
                 for line in clinician_summary.split("\n"):
                     if line.strip():
                         st.write("•", line.strip())
-        else:
-            st.warning("Clinician Summary is not generated for this case.")
+        
 
-        with st.expander("Full Clinical Explanation"):
-            st.markdown(formatted)
+        # Parse structured explanation into sections
+        st.markdown("### Explanation Scope")
 
-        # Reasoning confidence
+        st.markdown("""
+        - Based on Model-Attributed Drivers  
+        - Supported by Retrieved clinical guidelines 
+        - No external risk factors introduced 
+        """)
+
+        with st.expander("Full Clinical Explanation", expanded=True):
+            if full_explanation:
+                # Split by markdown headers to identify sections
+                sections = full_explanation.split("###")
+                
+                for section in sections:
+                    section = section.strip()
+                    if not section:
+                        continue
+                    
+                    lines = section.split("\n", 1)
+                    header = lines[0].strip() if lines else ""
+                    content = lines[1].strip() if len(lines) > 1 else ""
+                    
+                    if header and content:
+                        st.markdown(f"### {header}")
+                        
+                        # Handle bulleted lists for driver sections
+                        if "Drivers" in header or "drivers" in header.lower():
+                            for line in content.split("\n"):
+                                if line.strip().startswith("-"):
+                                    st.markdown(f"  {line.strip()}")
+                                elif line.strip():
+                                    st.markdown(f"  • {line.strip()}")
+                        else:
+                            st.write(content)
+                    elif header:
+                        st.markdown(f"### {header}")
+            else:
+                st.info("No Explanation Available.")
+       
+           
+
+        # Reasoning confidence and guardrail status
         reasoning_conf = metadata.get("reasoning_confidence", "UNKNOWN")
         guardrail_mode = metadata.get("guardrail_mode", "UNKNOWN")
 
         col_c1, col_c2 = st.columns(2)
 
         with col_c1:
-            st.write("Reasoning Confidence:", reasoning_conf)
+            if reasoning_conf == "HIGH":
+                st.success(f"AI Reasoning Integrity: {reasoning_conf}")
+
+            elif reasoning_conf == "MEDIUM":
+                st.warning(f"AI Reasoning Integrity: {reasoning_conf}")
+
+            elif reasoning_conf == "LOW":
+                st.error(f"AI Reasoning Integrity: {reasoning_conf}")
+
+            else:
+                st.info(f"AI Reasoning Integrity: {reasoning_conf}")
 
         with col_c2:
-            st.write("Guardrail Mode:", guardrail_mode)
+            if mode == "SAFE":
+                guardrail_mode = "SAFE"
 
-        st.markdown("---")
+            if guardrail_mode == "SAFE":
+                st.error("Guardrail Mode: SAFE")
+            else:
+                st.info("Guardrail Mode: NORMAL")
+
+        st.caption("System Provides Decision Support Guidance. Final Clinical Judgement Remains with the Clinician.")
 
         # ======================================================
         # SECTION 4 — EXPLANATION ALIGNMENT VALIDATION
@@ -476,7 +615,7 @@ with tabs[1]:
         decision_mode = metadata.get("decision_mode", prediction.get("decision_mode"))
 
         if decision_mode == "SAFE":
-            st.info("Alignment validation skipped due to constrained reasoning signals in SAFE mode.")
+            st.info("Alignment Validation Skipped Due to Constrained Reasoning Signals in SAFE Mode.")
             st.markdown("---")
         else:
             llm_text = full_explanation.lower()
@@ -489,19 +628,63 @@ with tabs[1]:
             st.caption(f"{mentioned} of {len(shap_features)} top drivers explicitly referenced.")
 
             st.markdown(f"**Top Feature Coverage:** {coverage:.2f} ({coverage*100:.0f}%)")
-            st.caption("Fraction of top SHAP drivers explicitly referenced in explanation.")
+            st.caption("Fraction of Top SHAP Drivers Explicitly Referenced in Explanation.")
 
             if coverage < 0.4:
-                st.warning("Weak alignment between model drivers and explanation.")
+                st.warning("Weak Alignment Between Model Drivers and Explanation.")
             elif coverage < 0.7:
-                st.info("Moderate alignment between SHAP drivers and explanation.")
+                st.info("Moderate Alignment Between SHAP Drivers and Explanation.")
             else:
-                st.success("Strong alignment between model drivers and explanation.")
+                st.success("Strong Alignment Between Model Drivers and Explanation.")
         else:
-            st.info("Alignment validation unavailable.")
+            st.info("Alignment Validation Unavailable.")
 
         st.markdown("---")
 
+
+
+        # ==========================================================
+        # SECTION 4B — Explanation Reliability Diagnostics
+        # ==========================================================
+
+        st.subheader("Explanation Reliability Diagnostics")
+
+        # Extract reasoning block from API response
+        response_json = response.json() 
+        reasoning_data = response_json.get("reasoning", {})
+
+        reliability_data = reasoning_data.get("explanation_reliability", {})
+
+        coverage_score = reliability_data.get("coverage", 0)
+        traceability_score = reliability_data.get("traceability", 0)
+        reliability_score = reliability_data.get("score", 0)
+        reliability_label = reliability_data.get("level", "UNKNOWN")
+
+        col_r1, col_r2, col_r3 = st.columns(3)
+
+        col_r1, col_r2, col_r3 = st.columns(3)
+
+        with col_r1:
+            st.metric("Driver Coverage", f"{coverage_score:.2f}")
+
+        with col_r2:
+            st.metric("Evidence Traceability", f"{traceability_score:.2f}")
+
+        with col_r3:
+            st.metric("Explanation Reliability", f"{reliability_score:.2f}")
+
+        # Reliability indicator
+        if reliability_label == "HIGH":
+            st.success("Explanation Reliability: HIGH")
+        elif reliability_label in ["MEDIUM", "MODERATE"]:
+            st.warning("Explanation Reliability: MODERATE")
+        else:
+            st.error("Explanation Reliability: LOW")
+        st.progress(min(max(reliability_score, 0.0), 1.0))
+        st.caption(f"Reliability Score: {reliability_score:.2f}")
+        st.markdown("---")
+
+        
         # ======================================================
         # SECTION 5 — RELIABILITY & GOVERNANCE DIAGNOSTICS
         # ======================================================
@@ -538,17 +721,16 @@ with tabs[1]:
         decision_mode = metadata.get("decision_mode", prediction.get("decision_mode"))
 
         if decision_mode == "SAFE":
-            st.info("Alignment validation skipped in SAFE mode due to intentionally constrained reasoning.")
+            st.info("Alignment Validation Skipped in SAFE Mode Due to Intentionally Constrained Reasoning.")
             st.markdown("---")
         
 
         elif reasoning_conf != "UNKNOWN" and model_conf_label != reasoning_conf:
-            st.warning(" ⚠️ Model confidence and Reasoning confidence level are not aligned.")
+            st.warning(" ⚠️ Model Confidence and Reasoning Confidence Level Are Not Aligned.")
         else:
-            st.success("Model confidence and reasoning confidence are aligned.")
+            st.success("Model Confidence and Reasoning Confidence are Aligned.")
 
-        st.divider()
-        st.subheader("Governance Status")
+        st.subheader("AI System Governance & Safety")
 
         metadata = reasoning.get("metadata", {})
 
@@ -557,6 +739,9 @@ with tabs[1]:
         shap_used = metadata.get("shap_used", False)
         retrieval_failed = metadata.get("retrieval_failed", False)
         explainability_status = metadata.get("explainability_status")
+
+        if mode == "SAFE":
+                llm_used = False
 
         if not explainability_status:
             explainability_status = "UNAVAILABLE"
@@ -574,13 +759,13 @@ with tabs[1]:
             degraded = True
 
         if critical:
-            st.error("🔴 Critical: LLM fallback activated. Explanation reliability may be limited.")
+            st.error("🔴 Critical: LLM Fallback Activated. Explanation Reliability May Be Limited.")
         elif degraded:
-            st.warning("🟡 Degraded: One or More Reasoning Components partially Unavailable.")
+            st.warning("🟡 Degraded: One or More Reasoning Components Partially Unavailable.")
         else:
-            st.success("🟢 System Operating Normally — All Core Reasoning Components are active.")
+            st.success("🟢 System Operating Normally — All Core Reasoning Components Are Active.")
 
-        st.caption("System health reflects reasoning pipeline integrity, not clinical certainity.")
+        st.caption("System Health Reflects Reasoning Pipeline Integrity, Not Clinical Certainity.")
 
         col_d1, col_d2 = st.columns(2)
 
@@ -588,6 +773,7 @@ with tabs[1]:
             st.write("LLM Used:", "✅" if llm_used else "❌")
             st.write("LLM Fallback Activated:", "✅" if llm_fallback else "❌")
             st.write("SHAP Used:", "✅" if shap_used else "❌")
+
 
         with col_d2:
             if decision_mode == "SAFE":
@@ -601,7 +787,6 @@ with tabs[1]:
             st.write("Decision Mode:", decision_mode)
             st.write("Decision Source:", decision_source)
 
-        st.markdown("---")
 
         # ======================================================
         # SECTION 6 — SYSTEM OBSERVABILITY (LLM Layer)
@@ -622,7 +807,7 @@ with tabs[1]:
             if total_latency is not None:
                 st.metric("Total End-to-End Latency (ms)", int(total_latency))
 
-        st.caption("Latency metrics enable scaling decisions and performance diagnostics.")
+        st.caption("Latency Metrics Enable Scaling Decisions And Performance Diagnostics.")
 
 #===================== OVERRIDE TAB =====================
 

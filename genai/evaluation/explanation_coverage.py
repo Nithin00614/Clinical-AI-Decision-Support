@@ -16,5 +16,5 @@ def compute_explanation_coverage(explanation, drivers):
 
         if feature.lower() in text:
             covered += 1
-
-    return covered / len(drivers) if drivers else 0
+    covered = round(covered / len(drivers) if drivers else 0, 2)
+    return covered

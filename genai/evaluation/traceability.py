@@ -1,9 +1,12 @@
 def compute_driver_evidence_traceability(drivers, evidence_chunks):
 
+    if not evidence_chunks:
+        return 0
+
     if isinstance(evidence_chunks, str):
         evidence_chunks = [evidence_chunks]
 
-    text = " ".join(evidence_chunks).lower()
+    text = " ".join(str(e) for e in evidence_chunks).lower()
 
     matched = 0
 
@@ -14,7 +17,7 @@ def compute_driver_evidence_traceability(drivers, evidence_chunks):
         else:
             feature = d
 
-        if feature.lower() in text:
+        if str(feature).lower() in text:
             matched += 1
-
-    return matched / len(drivers) if drivers else 0
+    traced = round(matched / len(drivers) if drivers else 0, 2)
+    return traced

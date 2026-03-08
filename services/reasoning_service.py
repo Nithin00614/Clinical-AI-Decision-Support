@@ -40,16 +40,26 @@ def run_reasoning(input_data: dict):
     or llm_result.get("text")
     )
 
+    risk_score = stage4["risk_score"]
+
+    if risk_score < 0.30:
+        risk_label = "LOW"
+    elif risk_score < 0.70:
+        risk_label = "MODERATE"
+    else:
+        risk_label = "HIGH"
+
     explanation = full_exp or ""
 
     drivers_list = stage4.get("drivers_list", [])
+    top_drivers = drivers_list[:3]
 
     # Use raw evidence chunks for reliability computation
-    evidence = stage4.get("_evidence_chunks", [])
+    evidence = stage4.get("retrieved_evidence", [])
 
-    traceability = compute_driver_evidence_traceability(drivers_list, evidence)
+    traceability = compute_driver_evidence_traceability(top_drivers, evidence)
 
-    coverage = compute_explanation_coverage(explanation, drivers_list)
+    coverage = compute_explanation_coverage(explanation, top_drivers)
 
     reliability_score, reliability_label = compute_explanation_reliability(
         traceability,
@@ -133,6 +143,7 @@ def run_reasoning(input_data: dict):
     return {
     "prediction": {
         "risk_score": stage4["risk_score"],
+        "risk_label":stage4["risk_label"],
         "confidence": stage4["confidence"],
         "decision_mode": stage4["decision_mode"],
         "decision_source": llm_result["decision_source"],
@@ -141,6 +152,7 @@ def run_reasoning(input_data: dict):
 
     "explainability": {
         "shap": stage4.get("shap"),
+        "drivers_list": top_drivers,
         "shap_available": stage4.get("shap_available", False),
         "shap_explanation": llm_result.get("shap_explanation"),
         "explainability_status": llm_result.get("explainability_status"),
@@ -157,7 +169,7 @@ def run_reasoning(input_data: dict):
         "references": reasoning.get("references", []),
         "metadata": llm_result.get("reasoning_metadata", {}),
         "explanation_reliability": llm_result.get("explanation_reliability", {}),
-    },
+},
 
     "system_metrics": {
     "retrieval_latency_ms": stage4.get("retrieval_latency_ms", 0.0),

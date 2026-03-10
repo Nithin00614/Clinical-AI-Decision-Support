@@ -80,19 +80,22 @@ def review_queue():
 @router.get("/metadata")
 def metadata():
     return {
-        "model_version": "ckd_model_v1",
-        "pipeline_version": "genai_pipeline_v1",
-        "llm_provider": "groq",
-        "llm_model": "llama-3.1-8b-instant"
+        "Model_version": "CKD-Predictor-v1.0",
+        "Model_trained_on": "20-02-2026",
+        "Feature_schema": "Ckd_Features_v1.0",
+        "Explainability": "SHAP",
+        "Pipeline_version": "Genai_Pipeline_v1",
+        "Llm_provider": "groq",
+        "Llm_model": "llama-3.1-8b-instant"
     }
 
 
 @router.get("/system/status")
 def system_status():
     return {
-        "model": "ready",
-        "retrieval": "ready",
-        "llm": "ready",
-        "hitl": "enabled",
-        "version": "backend-v1-stable"
+        "Model": "Ready",
+        "Retrieval": "Ready",
+        "Llm": "Ready",
+        "Hitl": "Enabled",
+        "Version": "Backend-v1-stable"
     }

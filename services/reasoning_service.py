@@ -109,21 +109,7 @@ def run_reasoning(input_data: dict):
         llm_result["decision_source"] = "CLINICIAN_OVERRIDE"
         stage4["confidence"] = round(stage4["confidence"] * 0.75, 3)
     else:
-        llm_result["decision_source"] = "MODEL"
-
-    audit_entry = {
-    "patient_id": input_data.get("patient_id"),
-    "risk_score": stage4.get("risk_score"),
-    "confidence": stage4.get("confidence"),
-    "decision_mode": llm_result.get("decision_mode"),
-    "explanation_reliability": llm_result.get("explanation_reliability"),
-    "traceability": llm_result.get("explanation_reliability", {}).get("traceability"),
-    "coverage": llm_result.get("explanation_reliability", {}).get("coverage"),
-    "timestamp": time.time()
-}
-
-    with open("hitl_audit_log.jsonl", "a") as f:
-        f.write(json.dumps(audit_entry) + "\n")    
+        llm_result["decision_source"] = "MODEL"  
 
     # attach outputs
     llm_result["risk_score"] = stage4["risk_score"]

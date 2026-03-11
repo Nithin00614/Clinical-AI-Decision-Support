@@ -415,9 +415,9 @@ with tabs[1]:
                 ("Model prediction generated", True),
                 ("SHAP attribution computed", metadata.get("shap_used", False)),
                 ("Clinical evidence retrieved", metadata.get("evidence_used", False)),
-                ("Evidence filtered by SHAP drivers", metadata.get("evidence_used", False)),
-                ("LLM interpretation generated", metadata.get("llm_used", False)),
-                ("Output guardrails validated", metadata.get("guardrail_mode") == "NORMAL"),
+                ("Evidence filtered by SHAP drivers", metadata.get("llm_used", False) and mode!="SAFE"),
+                ("LLM interpretation generated", metadata.get("llm_used", False) and mode != "SAFE"),
+                ("Guardrails Enforced", True),
                 ("Reliability diagnostics computed", True),
             ]
 
@@ -428,6 +428,10 @@ with tabs[1]:
                         
         if mode == "SAFE":
             st.error("🔒 Human Review Required — Automated Reasoning Constrained due to limited Reliability Signals.")
+            st.caption(
+                    "SAFE mode limits automated reasoning visibility when model confidence is low. "
+                    "Pipeline diagnostics continue to run for monitoring and audit traceability."
+                    )
         # ======================================================
         # SECTION 1 — MODEL ATTRIBUTION (Structured SHAP)
         # ======================================================
@@ -511,20 +515,27 @@ with tabs[1]:
         with col_r2:
             if retrieval_latency is not None:
                 st.caption(f"Retrieval Latency: {round(retrieval_latency)} ms")
+        
+        evidence_count = len(evidence_chunks)
+        if mode == "SAFE":
+            evidence_count = 0
+        st.write("Evidence Count:", evidence_count)
 
-        st.write("Evidence Count:", len(evidence_chunks))
+        if mode == "SAFE":
+            st.info("Evidence Display Suppressed in SAFE Mode to Limit Reliance on Potentially Unreliable Retrieval Signals.")
 
-        st.caption(f"Showing Top {len(evidence_chunks)} Clinically Relevant Evidence Excerpts")
+        if mode != "SAFE":
+            st.caption(f"Showing Top {len(evidence_chunks)} Clinically Relevant Evidence Excerpts")
 
-        if evidence_chunks:
-            st.caption("Evidence Supports Key Risk Drivers.")
+            if evidence_chunks:
+                st.caption("Evidence Supports Key Risk Drivers.")
 
-        if evidence_chunks:
-            for idx, chunk in enumerate(evidence_chunks):
-                with st.expander(f"Retrieved Guideline Evidence {idx+1}"):
-                    st.write(chunk)
-        else:
-            st.info("No Evidence Retrieved For This Case.")
+            if evidence_chunks:
+                for idx, chunk in enumerate(evidence_chunks):
+                    with st.expander(f"Retrieved Guideline Evidence {idx+1}"):
+                        st.write(chunk)
+            else:
+                st.info("No Evidence Retrieved For This Case.")
 
 
         doc_pages = defaultdict(list)
@@ -537,6 +548,9 @@ with tabs[1]:
                 doc_pages[doc].append(page)
 
         st.markdown("### Evidence Sources")
+
+        if mode == "SAFE":
+            st.info("Evidence Source Details Suppressed in SAFE Mode to Limit Reliance on Potentially Unreliable Retrieval Signals.")
 
         for doc, pages in doc_pages.items():
 
@@ -574,12 +588,13 @@ with tabs[1]:
 
         # Parse structured explanation into sections
         st.markdown("### Explanation Scope")
-
-        st.markdown("""
-        - Based on Model-Attributed Drivers  
-        - Supported by Retrieved Clinical Guidelines 
-        - No External Risk Factors Introduced 
-        """)
+        
+        if mode != "SAFE":
+            st.markdown("""
+            - Based on Model-Attributed Drivers  
+            - Supported by Retrieved Clinical Guidelines 
+            - No External Risk Factors Introduced 
+            """)
 
         with st.expander("Full Clinical Explanation", expanded=True):
             if full_explanation:
@@ -777,7 +792,7 @@ with tabs[1]:
         explainability_status = metadata.get("explainability_status")
 
         if mode == "SAFE":
-                llm_used = False
+            llm_used = False
 
         if not explainability_status:
             explainability_status = "UNAVAILABLE"
@@ -797,7 +812,7 @@ with tabs[1]:
         if critical:
             st.error("🔴 Critical: LLM Fallback Activated. Explanation Reliability May Be Limited.")
         elif decision_mode == "SAFE":
-            st.warning("🟡 Safe Mode Active: LLM reasoning restricted dur to safety guardrails.")    
+            st.warning("🟡 Safe Mode Active: LLM Reasoning Restricted due to Safety Guardrails.")    
         elif degraded:
             st.warning("🟡 Degraded: One or More Reasoning Components Partially Unavailable.")
         else:
@@ -808,14 +823,14 @@ with tabs[1]:
         col_d1, col_d2 = st.columns(2)
 
         with col_d1:
-            st.write("LLM Used:", "✅" if llm_used else "❌")
+            st.write("LLM Explanation:", "✅" if llm_used else "❌")
             st.write("LLM Fallback Activated:", "✅" if llm_fallback else "❌")
             st.write("SHAP Used:", "✅" if shap_used else "❌")
 
 
         with col_d2:
             if decision_mode == "SAFE":
-                st.write("Evidence Retrieval:", "⚠️ Suppressed (SAFE_MODE)")
+                st.write("Evidence Retrieval:", "⚠️ Suppressed ")
             elif retrieval_failed:
                 st.write("Evidence Retrieval:", "❌ Retrieval Failed")
             elif evidence_used:

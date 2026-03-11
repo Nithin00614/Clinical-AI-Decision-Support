@@ -287,9 +287,9 @@ with tabs[0]:
             st.caption("Represents Calibrated System Reliability and Prediction Stability - Not Clinical Certainity. ")    
 
             model_version = pred.get("model_version", "UNKNOWN")
-            training_data_version = "CKD_DATASET_v1.0"
+            Training_data_version = "CKD_DATASET_v1.0"
             st.caption(f"MODEL Version: {model_version}")
-            st.caption(f"Training Data Version: {training_data_version}")
+            st.caption(f"Training Data Version: {Training_data_version}")
 
         with col_r2:
 

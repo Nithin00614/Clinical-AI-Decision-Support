@@ -83,6 +83,7 @@ def metadata():
         "Model_version": "CKD-Predictor-v1.0",
         "Model_trained_on": "20-02-2026",
         "Feature_schema": "Ckd_Features_v1.0",
+        "Training_data_version": "CKD_dataset_v1.0",
         "Explainability": "SHAP",
         "Pipeline_version": "Genai_Pipeline_v1",
         "Llm_provider": "groq",

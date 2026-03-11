@@ -287,7 +287,9 @@ with tabs[0]:
             st.caption("Represents Calibrated System Reliability and Prediction Stability - Not Clinical Certainity. ")    
 
             model_version = pred.get("model_version", "UNKNOWN")
+            training_data_version = "CKD_DATASET_v1.0"
             st.caption(f"MODEL Version: {model_version}")
+            st.caption(f"Training Data Version: {training_data_version}")
 
         with col_r2:
 
@@ -1250,6 +1252,7 @@ with tabs[4]:
 
     # Initialize default values
     metadata = {
+        "Train_data": "N/A",
         "Model_version": "N/A",
         "Model_trained_on": "N/A",
         "Feature_schema": "N/A",
@@ -1324,6 +1327,7 @@ with tabs[4]:
     with col1:
         st.write("**Model Version:**", metadata.get("Model_version", "N/A"))
         st.write("**Model Trained On:**", metadata.get("Model_trained_on", "N/A"))
+        st.write("**Training_data_version:**", metadata.get("Training_data_version", "N/A"))
         st.write("**Feature Schema:**", metadata.get("Feature_schema", "N/A"))
 
     with col2:

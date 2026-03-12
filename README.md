@@ -90,9 +90,7 @@ Prediction confidence tracking, drift detection, and system observability ensure
 
 # Architecture
 
-<p align="center">
-  <img src="docs/architecture/system_architecture.png" width="900"/>
-</p>!
+![Architecture](docs/architecture/system_architecture.png)
 
 ### Architecture Layers Summary
 

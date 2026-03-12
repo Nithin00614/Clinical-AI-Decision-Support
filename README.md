@@ -1,11 +1,11 @@
 # AI-Powered Clinical Decision Support System for Chronic Kidney Disease (CKD)
 
-![Python](https://img.shields.io/badge/Python-3.10-blue)
-![FastAPI](https://img.shields.io/badge/FastAPI-API-green)
-![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-red)
-![Machine Learning](https://img.shields.io/badge/ML-Scikit--Learn-orange)
+![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green?logo=fastapi&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-red?logo=streamlit&logoColor=white)
+![Machine Learning](https://img.shields.io/badge/ML-Scikit--Learn-orange?logo=scikitlearn&logoColor=white)
 ![Explainability](https://img.shields.io/badge/Explainability-SHAP-purple)
-![RAG](https://img.shields.io/badge/RAG-Clinical--Evidence-blueviolet)
+![RAG](https://img.shields.io/badge/RAG-Clinical%20Evidence-blueviolet)
 ![LLM](https://img.shields.io/badge/LLM-Reasoning-black)
 
 An **Explainable AI Clinical Decision Support System** for Chronic Kidney Disease (CKD) that combines machine learning prediction, SHAP explainability, clinical evidence retrieval, and LLM-based reasoning to provide transparent and reliable clinical insights.
@@ -31,20 +31,6 @@ This project implements a **layered AI clinical decision support system** that:
 The system design emphasizes **interpretability, reliability, and responsible AI deployment**.
 
 ---
-
-## Project Highlights
-
-| Component | Description |
-|-----------|-------------|
-| CKD Risk Prediction | Machine learning model predicts CKD risk from patient clinical features |
-| SHAP Explainability | Identifies which features contribute most to the prediction |
-| Clinical Evidence Retrieval | Retrieves relevant clinical guidelines using vector similarity search |
-| LLM Clinical Reasoning | Generates evidence-grounded explanations using SHAP insights and retrieved clinical knowledge |
-| AI Safety Guardrails | Validates generated explanations using safety filters and consistency checks |
-| Human-in-the-Loop Review | Enables clinicians to review model explanations before final decisions |
-| Monitoring & Governance | Tracks prediction confidence, system reliability, and data drift |
----
-
 ## Quick Navigation
 
 | Section | Description |
@@ -60,6 +46,21 @@ The system design emphasizes **interpretability, reliability, and responsible AI
 | Running the System | Setup and execution instructions |
 | Responsible AI | Safety and governance principles |
 | Future Improvements | Potential system extensions |
+
+
+---
+## Project Highlights
+
+| Component | Description |
+|-----------|-------------|
+| CKD Risk Prediction | Machine learning model predicts CKD risk from patient clinical features |
+| SHAP Explainability | Identifies which features contribute most to the prediction |
+| Clinical Evidence Retrieval | Retrieves relevant clinical guidelines using vector similarity search |
+| LLM Clinical Reasoning | Generates evidence-grounded explanations using SHAP insights and retrieved clinical knowledge |
+| AI Safety Guardrails | Validates generated explanations using safety filters and consistency checks |
+| Human-in-the-Loop Review | Enables clinicians to review model explanations before final decisions |
+| Monitoring & Governance | Tracks prediction confidence, system reliability, and data drift |
+---
 
 ---
 
@@ -90,7 +91,9 @@ Prediction confidence tracking, drift detection, and system observability ensure
 
 # Architecture
 
-![System Architecture](docs/architecture/System_architecture.png)
+<p align="center">
+  <img src="docs/architecture/system_architecture.png" width="900"/>
+</p>!
 
 ### Architecture Layers Summary
 
@@ -117,29 +120,6 @@ For detailed architecture documentation see:
 The orchestration controller executes the following pipeline:
 
 Patient Input → Risk Prediction → SHAP Explainability → Evidence Retrieval → LLM Clinical Reasoning → Guardrail Validation → Clinician Review
-
-## End-to-End Workflow
-
-1. **Patient Data Input**
-   - Clinical features are entered through the Streamlit dashboard.
-
-2. **Risk Prediction**
-   - The CKD machine learning model predicts the patient's disease risk.
-
-3. **Explainability**
-   - SHAP identifies the most influential clinical variables affecting the prediction.
-
-4. **Evidence Retrieval**
-   - Relevant clinical guideline evidence is retrieved using vector similarity search.
-
-5. **LLM Clinical Reasoning**
-   - The LLM synthesizes SHAP insights and clinical evidence to generate explanations.
-
-6. **Safety Validation**
-   - AI guardrails validate outputs using safety filters and reasoning checks.
-
-7. **Clinician Review**
-   - The final explanation is presented for clinician review and interpretation.
 
 Each stage ensures predictions remain **interpretable, evidence-grounded, and safety validated** before reaching clinicians.
 
@@ -284,40 +264,39 @@ Links:
 
 ---
 
-# Running the System
-
-### Install Dependencies
-
-```bash
-pip install -r requirements.txt
-
 ---
 
 # Running the System
+
+Follow these steps to run the Clinical AI Decision Support System locally.
 
 ### 1. Install Dependencies
 
+```bash
 pip install -r requirements.txt
-
----
+```
 
 ### 2. Start the Backend API (FastAPI)
 
+```bash
 uvicorn api.main:app --reload
+```
 
 This starts the FastAPI server responsible for routing requests to the AI services.
 
----
-
 ### 3. Launch the Streamlit Dashboard
 
+```bash
 streamlit run app.py
+```
 
 The Streamlit dashboard provides the interface for interacting with the CKD risk prediction system.
 
+
 ---
 
-# Responsible AI Considerations
+<details>
+<summary><b>Responsible AI Considerations</b></summary>
 
 This project incorporates several responsible AI principles to ensure safe and interpretable clinical decision support.
 
@@ -343,17 +322,20 @@ The system monitors:
 
 These mechanisms help maintain long-term stability of the AI system.
 
+</details>
 ---
 
-# Future Improvements
+<details>
+<summary><b>Future Improvements</b></summary>
 
 Potential future extensions include:
 
 - Integration with real Electronic Health Record (EHR) systems
 - Continuous model retraining pipelines
 - Federated learning across hospitals
-- Advanced monitoring dashboards for AI governance
-- Real-time deployment infrastructure
+- Real-time clinical alert systems
+
+</details>
 
 ---
 

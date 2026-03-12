@@ -19,7 +19,7 @@ def build_llm_prompt(payload: dict):
     for item in top_positive[:5]:
         shap_features_str += f"  - {item.get('feature')}: +{item.get('impact'):.4f}\n"
     
-    shap_features_str += "                                                   \nProtective Drivers:\n"
+    shap_features_str += "                               \nProtective Drivers:\n"
     for item in top_negative[:5]:
         shap_features_str += f"  - {item.get('feature')}: {item.get('impact'):.4f}\n"
     

@@ -1,205 +1,325 @@
+# AI-Powered Clinical Decision Support System for Chronic Kidney Disease (CKD)
 
-# 🩺 CKD Clinical Decision Support System
+![Python](https://img.shields.io/badge/Python-3.10-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-API-green)
+![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-red)
+![Machine Learning](https://img.shields.io/badge/ML-Scikit--Learn-orange)
+![Explainability](https://img.shields.io/badge/Explainability-SHAP-purple)
+![RAG](https://img.shields.io/badge/RAG-Clinical--Evidence-blueviolet)
+![LLM](https://img.shields.io/badge/LLM-Reasoning-black)
 
-**An Explainable, Robust, and Externally Validated ML Framework**
+An **Explainable AI Clinical Decision Support System** for Chronic Kidney Disease (CKD) that combines machine learning prediction, SHAP explainability, clinical evidence retrieval, and LLM-based reasoning to provide transparent and reliable clinical insights.
 
----
-
-## 📌 Project Overview
-
-Chronic Kidney Disease (CKD) is a progressive condition that often remains undiagnosed until advanced stages. This project presents a **clinical decision support system (CDSS)** for CKD risk prediction using machine learning, with a strong emphasis on **interpretability, robustness, and real-world generalization**.
-
-Unlike typical student projects that stop at model accuracy, this system evaluates:
-
-* *Why* predictions are made (Explainability)
-* *How stable* predictions are under noisy clinical data (Robustness)
-* *Whether the model generalizes* to unseen populations (External Validation)
-
-This project is designed as a **research-grade ML system** and serves as a flagship portfolio project.
+The system integrates **ML predictions, explainability, retrieval-augmented reasoning, safety guardrails, and monitoring** to support clinicians with interpretable decision support.
 
 ---
 
-## 🎯 Key Objectives
+# Overview
 
-* Predict CKD risk using clinically relevant laboratory measurements
-* Provide transparent explanations for model predictions
-* Assess robustness under realistic lab measurement noise
-* Validate generalization on an independent external dataset
-* Follow clean, modular, and reproducible ML practices
+Chronic Kidney Disease (CKD) requires early risk detection and transparent clinical decision support. Traditional machine learning models often provide predictions without clear reasoning, limiting their usefulness in real-world clinical settings.
 
----
+This project implements a **layered AI clinical decision support system** that:
 
-## 🧠 Methodology Overview
+- Predicts CKD risk using machine learning models
+- Explains predictions using SHAP feature attribution
+- Retrieves supporting clinical guideline evidence
+- Generates evidence-grounded reasoning using a large language model
+- Applies safety guardrails before presenting outputs
+- Supports human-in-the-loop clinician review
+- Monitors system reliability and data drift
 
-### 1. Data Sources
-
-* **Primary Dataset**: CKD dataset (Kaggle, derived from clinical records)
-* **External Dataset**: Cleaned CKD dataset from the **UCI Machine Learning Repository**
-
-Both datasets contain laboratory and clinical features relevant to kidney function.
+The system design emphasizes **interpretability, reliability, and responsible AI deployment**.
 
 ---
 
-### 2. Feature Engineering
+## Quick Navigation
 
-* Focus on **numerical laboratory measurements** for stability across datasets
-* Explicit separation of:
-
-  * Numeric features
-  * Binary clinical indicators
-  * Categorical observations
-* Processed data stored as reproducible artifacts (`data/processed/`)
-
----
-
-### 3. Model Development
-
-Two models were developed:
-
-#### 🔹 Primary Model (Full Feature Pipeline)
-
-* Logistic Regression with:
-
-  * Standard scaling (numeric features)
-  * One-hot encoding (categorical features)
-* Used for:
-
-  * Internal evaluation
-  * Explainability analysis
-
-#### 🔹 Secondary Model (Numeric-Only Model)
-
-* Logistic Regression trained **only on numeric lab features**
-* Purpose:
-
-  * Enable reliable external validation
-  * Avoid dataset-specific categorical encoding issues
-* Used exclusively for robustness testing and cross-dataset evaluation
+| Section | Description |
+|--------|-------------|
+| Overview | Project goals and background |
+| Key Features | Core capabilities of the system |
+| Architecture | High-level system architecture |
+| System Pipeline | End-to-end decision pipeline |
+| Project Structure | Repository organization |
+| Tech Stack | Technologies used |
+| Documentation | Detailed technical documents |
+| Running the System | Setup and execution instructions |
+| Responsible AI | Safety and governance principles |
+| Future Improvements | Potential system extensions |
 
 ---
 
-## 🔍 Explainability (SHAP)
+# Key Features
 
-To ensure transparency, **SHAP (SHapley Additive exPlanations)** was applied to the trained model.
+### CKD Risk Prediction
+Machine learning model predicts CKD risk from patient clinical features.
 
-* **Global explanations** identify the most influential laboratory markers
-* **Local explanations** justify individual patient predictions
-* SHAP analysis was performed on the trained model *after preprocessing*, ensuring faithful attribution
+### Explainable AI
+SHAP feature attribution explains which variables contribute to model predictions.
 
-📌 Key Insight:
-Renal biomarkers such as serum creatinine, hemoglobin, and blood urea strongly influence CKD risk predictions.
+### Evidence Retrieval (RAG)
+Clinical guideline evidence is retrieved using vector similarity search.
 
----
+### LLM Clinical Reasoning
+An LLM synthesizes explanations using both SHAP insights and retrieved clinical evidence.
 
-## 🛡️ Robustness Analysis
+### AI Safety Guardrails
+Safety filters, clinical disclaimers, and reasoning validation ensure responsible outputs.
 
-Clinical data is inherently noisy due to:
+### Human-in-the-Loop Review
+Clinicians can review explanations and override system decisions when necessary.
 
-* Measurement variability
-* Instrumentation error
-* Reporting inconsistencies
-
-To simulate this, Gaussian noise was injected into numeric features, and prediction stability was evaluated.
-
-* Predictions remained stable under moderate noise (1–10%)
-* Mean prediction shifts were limited, indicating resilience
-* Both global and patient-level robustness were assessed
-
-📌 This analysis demonstrates suitability for real-world clinical environments.
+### Monitoring & Governance
+Prediction confidence tracking, drift detection, and system observability ensure reliability.
 
 ---
 
-## 🌍 External Validation
+# Architecture
 
-Generalization was evaluated using an **independent CKD dataset** derived from the UCI repository.
+> **System Architecture Summary**
+>
+> This system follows a layered AI architecture combining:
+>
+> - Machine Learning risk prediction  
+> - SHAP-based explainability  
+> - Retrieval-Augmented Generation (RAG) for clinical evidence  
+> - LLM-based clinical reasoning  
+> - AI safety guardrails  
+> - Human-in-the-loop validation  
+>
+> The architecture prioritizes **interpretability, reliability, and clinical safety**.
 
-* No retraining or tuning was performed
-* Only shared numeric laboratory features were used
-* Missing values (`'?'`) were safely handled to avoid leakage
+![System Architecture](docs/architecture/System_architecture.png)
 
-### External Results Summary:
+For detailed architecture documentation see:
 
-* **ROC-AUC = 1.0**
-* **Zero false negatives**
-* Minor false positives, favoring sensitivity over specificity
-
-📌 Interpretation:
-The model exhibits strong generalization on external data, while maintaining clinically appropriate conservative behavior.
+➡️ **docs/architecture/architecture_overview.md**
 
 ---
 
-## 📁 Project Structure
 
-```
-Clinical-AI-System/
+# System Pipeline
+
+The orchestration controller executes the following pipeline:
+
+Patient Input → Risk Prediction → SHAP Explainability → Evidence Retrieval → LLM Clinical Reasoning → Guardrail Validation → Clinician Review
+
+Each stage ensures predictions remain **interpretable, evidence-grounded, and safety validated** before reaching clinicians.
+
+---
+
+# System Capabilities
+
+This system integrates multiple AI capabilities to provide reliable and interpretable clinical decision support.
+
+### Explainable Machine Learning
+The CKD prediction model provides interpretable outputs using **SHAP feature attribution**, allowing clinicians to understand which clinical variables influence predictions.
+
+### Retrieval-Augmented Clinical Evidence
+Relevant clinical guideline evidence is retrieved using **vector similarity search**, enabling evidence-grounded reasoning.
+
+### LLM Clinical Reasoning
+A large language model synthesizes explanations using both **SHAP insights and retrieved clinical evidence**.
+
+### AI Safety Guardrails
+Generated outputs are validated through safety filters, reasoning consistency checks, and clinical disclaimers.
+
+### Human-in-the-Loop Decision Support
+Clinicians can review system explanations and override system decisions when necessary.
+
+### Monitoring and Governance
+The system tracks prediction confidence, monitors calibration stability, and detects data drift to maintain reliability.
+
+---
+
+---
+
+# Project Structure
+
+```text
+clinical-ai-system/
 │
-├── data/
-│   ├── raw/
-│   ├── processed/
-│   │   └── ckd_processed.csv
-│   └── external/
-│       └── uci_ckd.csv
+├── api/                      # FastAPI endpoints and API gateway
+├── configs/                  # Configuration files
+├── data/                     # Dataset and preprocessing artifacts
 │
-├── notebooks/
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_model_training.ipynb
-│   ├── 03_explainability_shap.ipynb
-│   ├── 04_robustness_analysis.ipynb
-│   └── 05_external_validation.ipynb
+├── genai/                    # Generative AI pipeline
+│   ├── controller/           # Pipeline orchestration
+│   ├── explainability/       # SHAP explanation logic
+│   ├── retrieval/            # Clinical evidence retrieval (RAG)
+│   ├── llm/                  # LLM reasoning components
+│   ├── guardrails/           # Safety validation
+│   ├── evaluation/           # Model evaluation
+│   └── prompts/              # Prompt templates
 │
-├── models/
-│   ├── full_pipeline.pkl
-│   └── numeric_model.pkl
+├── models/                   # Machine learning models
+├── services/                 # Core prediction services
+├── tests/                    # System tests
 │
-├── README.md
+├── docs/
+│   ├── architecture/
+│   │   ├── architecture_overview.md
+│   │   └── System_architecture.png
+│   ├── model_card.md
+│   └── data_shift.md
+│
+├── system_design.md          # Detailed system design
 ├── requirements.txt
-└── .gitignore
-```
-
-Each notebook focuses on **one stage of the ML lifecycle**, ensuring clarity and reproducibility.
+├── Dockerfile
+└── README.md
 
 ---
 
-## 🧪 Reproducibility
+# Tech Stack
 
-1. Create a virtual environment
-2. Install dependencies:
+### Machine Learning
+- Python
+- Scikit-learn
+- SHAP
 
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run notebooks in numerical order (`01 → 05`)
+### Generative AI
+- Large Language Models (LLMs)
+- Retrieval-Augmented Generation (RAG)
 
-All models and results can be reproduced end-to-end.
+### Backend
+- FastAPI
 
----
+### Frontend
+- Streamlit
 
-## 🚀 Future Work
-
-* Integrate a **GenAI (RAG-based) reasoning layer** to:
-
-  * Explain predictions using clinical guidelines
-  * Provide evidence-backed decision support
-* Extend system to medication adherence and nutrition planning
-* Explore uncertainty quantification for clinical risk estimation
+### Infrastructure
+- Vector similarity search for clinical evidence retrieval
+- Monitoring and observability components
 
 ---
 
-## 📌 Key Takeaways
+# Key System Design Decisions
 
-* External validation is as important as internal accuracy
-* Interpretability and robustness are critical for clinical ML systems
-* Numeric laboratory features provide strong, transferable signal
-* Clean project structure enhances credibility and maintainability
+This project follows several design principles commonly used in production AI systems.
+
+### Explainability First
+Clinical AI systems require interpretability.  
+The model integrates **SHAP feature attribution** so clinicians can understand the factors influencing predictions.
+
+### Evidence-Grounded Reasoning
+LLM reasoning is combined with **retrieved clinical guideline evidence**, reducing hallucination risk and improving reliability.
+
+### Modular AI Services
+The architecture separates prediction, explainability, retrieval, reasoning, and guardrails into **independent services**, enabling easier maintenance and scalability.
+
+### Human-in-the-Loop Validation
+Clinical decisions require expert oversight.  
+The system allows clinicians to review explanations and override system outputs.
+
+### Safety and Guardrails
+AI-generated explanations pass through **validation layers** to ensure safety, consistency, and appropriate disclaimers.
+
+### Monitoring and Governance
+Model predictions and system performance are monitored through:
+
+- Prediction confidence tracking
+- Data drift detection
+- System observability
+
+These components help ensure **long-term reliability of the AI system**.
 
 ---
 
-## 👤 Author
+# Documentation
 
-**Nithin Gowda P**
-Final Year Engineering Student | Aspiring AI/ML Engineer
-Focused on building **robust, explainable, and real-world ML systems**
+Detailed documentation for the system is available in the `docs` directory.
+
+| Document | Description |
+|--------|-------------|
+| Architecture Overview | High-level system architecture |
+| Model Card | Model behavior, evaluation, and limitations |
+| Data Shift | Data drift monitoring and mitigation |
+| System Design | Detailed design decisions and implementation |
+
+Links:
+
+- docs/architecture/architecture_overview.md  
+- docs/model_card.md  
+- docs/data_shift.md  
+- system_design.md  
 
 ---
 
+# Running the System
 
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+
+---
+
+# Running the System
+
+### 1. Install Dependencies
+
+pip install -r requirements.txt
+
+---
+
+### 2. Start the Backend API (FastAPI)
+
+uvicorn api.main:app --reload
+
+This starts the FastAPI server responsible for routing requests to the AI services.
+
+---
+
+### 3. Launch the Streamlit Dashboard
+
+streamlit run app.py
+
+The Streamlit dashboard provides the interface for interacting with the CKD risk prediction system.
+
+---
+
+# Responsible AI Considerations
+
+This project incorporates several responsible AI principles to ensure safe and interpretable clinical decision support.
+
+### Explainability
+All predictions include **SHAP explanations** so clinicians can understand which clinical features influence the model output.
+
+### Evidence-Grounded Reasoning
+LLM explanations are supported by **retrieved clinical guideline evidence**, helping reduce hallucinations and improve reliability.
+
+### Human Oversight
+Clinicians remain responsible for reviewing predictions and explanations through a **human-in-the-loop decision process**.
+
+### Safety Guardrails
+Generated reasoning passes through **validation layers** that enforce safety checks and clinical disclaimers.
+
+### Monitoring
+The system monitors:
+
+- Prediction confidence
+- Model calibration
+- Data drift
+- Pipeline reliability
+
+These mechanisms help maintain long-term stability of the AI system.
+
+---
+
+# Future Improvements
+
+Potential future extensions include:
+
+- Integration with real Electronic Health Record (EHR) systems
+- Continuous model retraining pipelines
+- Federated learning across hospitals
+- Advanced monitoring dashboards for AI governance
+- Real-time deployment infrastructure
+
+---
+
+# Disclaimer
+
+This project is a **research and educational implementation** of an AI-powered clinical decision support system.
+
+It is **not intended for real medical diagnosis or treatment decisions**.

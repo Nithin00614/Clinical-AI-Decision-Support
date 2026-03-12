@@ -1,62 +1,160 @@
-# GenAI Clinical Reasoning Layer
+# GenAI Reasoning Layer
 
-This module extends the CKD Clinical Decision Support System by adding a
-retrieval-augmented generative reasoning layer.
+## 1. Purpose of the GenAI Layer
 
-## Purpose
-- Provide evidence-grounded explanations for ML-generated CKD risk scores
-- Retrieve authoritative clinical guideline excerpts
-- Translate technical model outputs into clinician-friendly reasoning
+The GenAI layer provides **structured clinical reasoning** on top of the machine learning prediction.
 
-## Scope
-The GenAI layer:
-- Consumes ML outputs (risk score, SHAP drivers)
-- Retrieves supporting evidence from clinical guidelines
-- Generates grounded, explainable summaries
+While the predictive model estimates CKD risk probability, the reasoning layer translates model outputs into **clinically interpretable explanations**.
 
-The GenAI layer does NOT:
-- Predict CKD
-- Replace the ML model
-- Provide diagnoses or treatment decisions
+Its goals are to:
 
-## Design Principles
-- Separation of concerns (ML predicts, GenAI explains)
-- Retrieval-first reasoning (no free hallucination)
-- Explicit citation of guideline sources
-- Conservative response behavior when evidence is insufficient
+- translate model outputs into human-readable clinical reasoning
+- ground explanations using clinical guideline evidence
+- prevent unsupported claims through safety guardrails
+- improve interpretability for clinicians
 
-## Input Contract
-- CKD risk probability (float)
-- Top contributing features from SHAP analysis
+This layer operates as a **reasoning component**, not a diagnostic system.
 
-## Output Contract
-- Plain-language explanation of risk factors
-- Evidence-backed reasoning with citations
-- Clinical considerations (non-prescriptive)
+---
 
-## Ingestion & Chunking
-Guideline PDFs are loaded page-wise and split into overlapping semantic chunks (~800 tokens, 120 overlap) to preserve clinical context while enabling precise retrieval.
+## 2. Role in the System Pipeline
 
-## Retrieval Index
-Embeddings are generated locally and stored in a FAISS index for fast cosine-similarity search. Each chunk retains source metadata (document and page).
+The reasoning layer sits after model prediction and explainability.
 
-## Retrieval Sanity Check
-A standalone retrieval test validates that guideline-relevant text is returned for clinical queries (e.g., serum creatinine, CKD risk), ensuring index quality before LLM integration.
-Retrieval tests confirm that clinically relevant guideline evidence (e.g., proteinuria, creatinine, albuminuria) is returned for CKD-related queries.
+Pipeline flow:
 
-## Grounded Clinical Reasoning
-The GenAI layer integrates ML predictions with SHAP-derived feature contributions and retrieves evidence from clinical guidelines. Reasoning is retrieval-grounded, citation-aware, and intentionally non-prescriptive.
+```
+Model Prediction
+↓
+SHAP Feature Attribution
+↓
+Evidence Retrieval
+↓
+Evidence Filtering
+↓
+LLM Clinical Reasoning
+↓
+Output Guardrail Validation
+↓
+Structured Explanation
+```
 
-## Stage 4A: System Faithfulness and Grounding Evaluation
+This design ensures explanations are **grounded in model signals and clinical evidence**.
 
-We evaluate the trustworthiness of the explanation pipeline prior to LLM integration.
+---
 
-**Faithfulness Evaluation**
-- Verifies alignment between SHAP-identified influential features and retrieved clinical guideline evidence.
-- Ensures that model explanations are supported by domain-relevant medical knowledge.
+## 3. Inputs to the Reasoning Engine
 
-**Grounding Evaluation**
-- Ensures that all explanatory claims are backed by retrieved guideline text.
-- When no supporting evidence is available, the system explicitly reports insufficient evidence rather than generating unsupported explanations.
+The reasoning engine receives structured inputs from earlier pipeline stages.
 
-This evaluation stage enforces safety, transparency, and auditability of the clinical decision support system before introducing any generative components.
+Key inputs include:
+
+- predicted CKD risk probability
+- risk category label
+- SHAP feature attribution drivers
+- retrieved clinical guideline evidence
+- reasoning constraints and formatting rules
+
+These inputs ensure the LLM produces **controlled, grounded explanations rather than free-form text generation**.
+
+---
+
+## 4. Prompt Design Strategy
+
+The reasoning engine uses a **structured prompt design** to reduce hallucinations and enforce explanation consistency.
+
+Key prompt design principles include:
+
+- strict reliance on SHAP feature drivers
+- restriction against introducing new clinical risk factors
+- use of retrieved guideline evidence for grounding
+- structured output format for predictable explanations
+- explicit uncertainty statements when evidence is limited
+
+This design ensures explanations remain **aligned with model behavior and available evidence**.
+
+---
+
+## 5. Evidence Retrieval (RAG)
+
+The system uses a **Retrieval-Augmented Generation (RAG)** approach to ground reasoning.
+
+Evidence retrieval:
+
+- searches an indexed clinical knowledge base
+- retrieves guideline excerpts relevant to the identified risk drivers
+- injects supporting evidence into the reasoning prompt
+
+Example sources include:
+
+- CKD clinical guideline excerpts
+- nephrology reference materials
+
+This grounding mechanism helps reduce hallucination risk and improves clinical interpretability.
+
+---
+
+## 6. Guardrails and Safety Controls
+
+Multiple safeguards are implemented to ensure reliable reasoning.
+
+These include:
+
+- **Feature grounding:** explanations must reference SHAP drivers
+- **Evidence filtering:** only relevant evidence is used
+- **Output structure enforcement:** reasoning must follow predefined sections
+- **SAFE decision mode:** reasoning may be restricted when prediction confidence is low
+
+These controls prevent unsupported claims and improve reasoning reliability.
+
+---
+
+## 7. Reasoning Traceability
+
+The system records execution trace metadata for the reasoning pipeline.
+
+Trace stages include:
+
+```
+Prediction
+↓
+SHAP Attribution
+↓
+Evidence Retrieval
+↓
+Evidence Filtering
+↓
+LLM Explanation Generation
+↓
+Guardrail Validation
+↓
+Reliability Diagnostics
+```
+
+This traceability allows the system to expose reasoning transparency and helps diagnose failures during development.
+
+---
+
+## 8. Known Limitations
+
+The reasoning layer has several limitations:
+
+- explanations depend on the quality of retrieved evidence
+- reasoning may be limited when evidence retrieval fails
+- outputs are constrained to the available SHAP feature drivers
+- the system does not provide clinical diagnosis
+
+The reasoning layer should therefore be interpreted as **AI-assisted explanation support**.
+
+---
+
+## 9. Future Improvements
+
+Potential improvements for future versions include:
+
+- improved clinical evidence retrieval coverage
+- structured reasoning graphs for explanation validation
+- hallucination detection mechanisms
+- reasoning consistency evaluation
+
+These improvements would further strengthen the reliability of the reasoning system.

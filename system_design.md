@@ -1,270 +1,314 @@
+# System Design – CKD AI Clinical Decision Support System
 
-Clinical AI System – System Design
+## 1. System Objective
 
-1. Objective
+Design an **AI-powered clinical decision support system** for **Chronic Kidney Disease (CKD) risk prediction** integrating:
 
-Design an end-to-end EHR-integrated AI system for Chronic Kidney Disease (CKD) risk prediction with:
+- Machine Learning Risk Prediction
+- SHAP Explainability
+- Clinical Evidence Retrieval (RAG)
+- LLM-Assisted Clinical Reasoning
+- Output Safety Guardrails
+- Human-in-the-Loop Audit Logging
 
-Calibrated predictive modeling
+The system prioritizes:
 
-SHAP-based explainability
+- Clinical interpretability
+- Safety-aware reasoning
+- Transparent decision support
+- Modular architecture
 
-Clinical reasoning layer (LLM-assisted)
-
-Retrieval-Augmented Generation (RAG)
-
-Output guardrails
-
-Audit logging
-
-
-The system prioritizes clinical trust, modularity, and extensibility.
-
+The system acts as **decision support only — final clinical decisions remain with clinicians.**
 
 ---
 
-2. High-Level Architecture
+## 2. High-Level Architecture
 
-Client (UI)
+The system follows a layered architecture:
+
+```
+Client UI
    │
    ▼
 FastAPI API Layer
    │
    ▼
-Orchestrator Service
+Decision Orchestrator
    │
-   ├── Inference Service (Logistic Model)
-   ├── Confidence Calibration Service
-   ├── SHAP Explainability Layer
-   ├── Reasoning Service (LLM)
-   ├── Retrieval Adapter (Guidelines RAG)
+   ├── Risk Prediction Engine
+   ├── Confidence Calibration
+   ├── SHAP Explainability
+   ├── Evidence Retrieval (RAG)
+   ├── LLM Clinical Reasoning
    └── Output Guardrails
+```
 
+### Architecture Layers
 
----
+**Presentation Layer**
+- Streamlit clinical dashboard
+- reasoning trace visualization
+- clinician override interface
 
-3. Request Flow
+**API Layer**
+- request validation
+- schema enforcement
+- routing to orchestrator
 
-1. User submits patient clinical parameters.
+**Clinical Intelligence Layer**
+- model inference
+- explainability
+- evidence retrieval
+- reasoning generation
+- guardrail validation
 
+**Data & Knowledge Layer**
 
-2. API validates request using schema layer.
-
-
-3. Orchestrator triggers:
-
-Prediction (Logistic Regression pipeline)
-
-Probability calibration
-
-SHAP explanation generation
-
-Retrieval of clinical guidelines
-
-LLM-based structured reasoning
-
-
-
-4. Guardrails validate output consistency.
-
-
-5. Final structured response returned to UI.
-
-
-
+- trained ML model artifacts  
+- SHAP explanation artifacts  
+- clinical guideline knowledge base  
+- audit logs  
 
 ---
 
-4. Core Components
+## 3. End-to-End Inference Pipeline
 
-4.1 Inference Layer
+Each prediction request flows through the following pipeline:
 
-Pre-trained Logistic Regression model
+```
+Patient Input
+↓
+API Validation
+↓
+Risk Prediction Model
+↓
+Probability Calibration
+↓
+SHAP Explainability
+↓
+Clinical Evidence Retrieval
+↓
+LLM Reasoning Generation
+↓
+Output Guardrails
+↓
+Confidence & Reliability Assessment
+↓
+Structured Response to UI
+```
 
-Feature-aligned preprocessing pipeline
-
-Calibrated probabilities
-
-Binary risk classification
-
-
-4.2 Confidence Calibration
-
-Sigmoid/Platt scaling applied post prediction
-
-Prevents overconfident probabilities
-
-Improves reliability in moderate-risk cases
-
-
-4.3 Explainability Layer
-
-SHAP-based local explanations
-
-Top feature contributors
-
-Clinical translation layer
-
-
-4.4 Reasoning Layer
-
-Structured LLM prompt
-
-SHAP-aware explanation
-
-Retrieved guideline grounding
-
-Latency tracking
-
-
-4.5 Retrieval-Augmented Generation (RAG)
-
-Indexed CKD guidelines
-
-Context injection into reasoning prompt
-
-Grounded explanation generation
-
-
-4.6 Guardrails
-
-Output validation
-
-Contradiction detection
-
-Safe formatting enforcement
-
-
+Each stage produces **metadata used for traceability and system diagnostics**.
 
 ---
 
-5. Data Flow
+## 4. Core System Components
 
-Raw Input
-→ Feature Alignment
-→ Model Prediction
-→ Calibration
-→ SHAP Computation
-→ Retrieval Context
-→ LLM Reasoning
-→ Guardrail Validation
-→ Final JSON Response
+### Risk Prediction Engine
 
+- Logistic Regression model trained for CKD risk classification
+- Feature-aligned preprocessing pipeline
 
----
+Outputs:
 
-6. Modularity Design Choices
+- risk probability
+- binary risk prediction
 
-Separation of inference and reasoning layers
-
-Dedicated confidence service
-
-Independent SHAP loader
-
-Orchestrator controls flow
-
-Services loosely coupled via function contracts
-
-
-This ensures:
-
-Maintainability
-
-Replaceable model architecture
-
-Extensible reasoning layer
-
-Future microservice decomposition
-
-
+Logistic regression is chosen for **interpretability and clinical transparency**.
 
 ---
 
-7. Production Readiness Considerations
+### Confidence Calibration
 
-Docker containerization
+Probability calibration improves prediction reliability.
 
-Model artifact loading at startup
+Method used:
 
-Environment variable configuration
+- Sigmoid / Platt scaling
 
-Audit logging (hitl_audit_log.jsonl)
+Benefits:
 
-Drift monitoring artifacts
-
-Calibration metrics tracking
-
-
+- reduces overconfident predictions
+- improves reliability in moderate-risk cases
 
 ---
 
-8. Scalability Strategy (Future)
+### Explainability Layer
 
-Model server isolation
+Uses **SHAP (SHapley Additive Explanations)** for local interpretability.
 
-Separate LLM microservice
+Provides:
 
-Async processing for reasoning
+- feature contribution scores
+- dominant clinical risk drivers
+- interpretable explanation signals
 
-Redis-based caching for retrieval
-
-Horizontal scaling via container orchestration
-
-
+This allows clinicians to understand **why a prediction was generated**.
 
 ---
 
-9. Security Considerations
+### Evidence Retrieval (RAG)
 
-Input validation via schema layer
+Retrieval-Augmented Generation integrates clinical knowledge sources.
 
-Output guardrails
+Capabilities:
 
-API key protection for LLM
+- retrieval of CKD guideline excerpts
+- contextual evidence injection
+- evidence-grounded explanation generation
 
-Logging without PHI persistence
-
-
-
----
-
-10. Why Logistic Regression?
-
-Clinical interpretability
-
-Linear contribution transparency
-
-SHAP consistency
-
-Lower overfitting risk
-
-Regulatory friendliness
-
-
+This improves reasoning reliability and reduces hallucination risk.
 
 ---
 
-11. Trade-Offs
+### Clinical Reasoning Engine
 
-Choice	Benefit	Trade-off
+The reasoning layer synthesizes:
 
-Logistic Model	Interpretable	Limited non-linear modeling
-RAG Layer	Grounded explanation	Slight latency increase
-Modular Services	Clean architecture	More components to manage
+- model prediction
+- SHAP feature drivers
+- retrieved clinical evidence
 
+A structured LLM prompt generates:
 
+- clinician-friendly explanations
+- risk interpretation summaries
+- evidence-grounded reasoning
+
+Reasoning latency and metadata are recorded for monitoring.
 
 ---
 
-12. Future Enhancements
+### Output Guardrails
 
-Multi-model ensemble
+Guardrails enforce safety constraints on generated explanations.
 
-Temporal EHR modeling
+Responsibilities include:
 
-Advanced calibration methods
+- preventing unsupported medical claims
+- validating reasoning consistency
+- restricting explanations in low-confidence cases
+- enforcing structured response formatting
 
-Deployment monitoring dashboard
+Guardrails operate **after reasoning generation**.
 
-CI/CD integration
+---
 
+## 5. Confidence & Decision Modes
+
+The system distinguishes between **prediction probability** and **reasoning reliability**.
+
+Three reasoning modes are supported:
+
+| Mode | Behavior |
+|------|----------|
+| SAFE | reasoning restricted due to low confidence |
+| NORMAL | standard explanation output |
+| VERBOSE | detailed reasoning with full evidence |
+
+SAFE mode prevents potentially unreliable explanations from being shown.
+
+---
+
+## 6. Human-in-the-Loop Workflow
+
+Clinicians remain the **final decision authority**.
+
+The system supports:
+
+- clinician override of AI predictions
+- documentation of override justification
+- audit logging of override events
+
+Override logs are stored in:
+
+```
+hitl_audit_log.jsonl
+```
+
+This ensures **traceability and accountability**.
+
+---
+
+## 7. Observability & Monitoring
+
+Operational diagnostics improve system transparency.
+
+Metrics include:
+
+- reasoning pipeline traceability
+- component execution status
+- inference latency metrics
+- reliability diagnostics
+
+These signals support monitoring and debugging.
+
+---
+
+## 8. Failure Modes & Mitigation
+
+| Failure Scenario | Mitigation |
+|------------------|------------|
+| Low model confidence | SAFE reasoning mode |
+| Evidence retrieval failure | fallback reasoning generation |
+| Explainability unavailable | degraded explanation mode |
+| LLM instability | guardrail validation |
+| Output inconsistency | guardrail rejection |
+
+The system is designed to **degrade gracefully rather than fail completely**.
+
+---
+
+## 9. Security Considerations
+
+Security mechanisms include:
+
+- strict API input validation
+- output guardrail enforcement
+- protected LLM API access
+- audit logging without storing sensitive patient identifiers
+
+These measures ensure safe system operation.
+
+---
+
+## 10. Key Design Trade-offs
+
+| Design Choice | Benefit | Trade-off |
+|---------------|---------|-----------|
+| Logistic Regression | interpretability | limited nonlinear modeling |
+| RAG reasoning | grounded explanations | increased latency |
+| Modular architecture | clean system design | more components |
+
+The system prioritizes **interpretability, transparency, and safety**.
+
+---
+
+## 11. Future Improvements (v2)
+
+Potential improvements include:
+
+Infrastructure
+- asynchronous inference pipelines
+- distributed retrieval services
+
+Model Monitoring
+- population stability index (PSI) drift detection
+- live calibration monitoring
+
+Reasoning Improvements
+- multi-hop clinical evidence retrieval
+- hallucination detection layers
+
+Deployment
+- observability dashboards
+- automated CI/CD pipelines
+
+---
+
+## 12. Known Limitations
+
+- trained on a limited CKD dataset
+- knowledge base coverage is limited
+- system has not undergone clinical validation
+
+The system should be considered a **research prototype for AI-assisted clinical decision support**.

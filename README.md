@@ -62,7 +62,6 @@ The system design emphasizes **interpretability, reliability, and responsible AI
 | Monitoring & Governance | Tracks prediction confidence, system reliability, and data drift |
 ---
 
----
 
 # Key Features
 
@@ -149,7 +148,6 @@ The system tracks prediction confidence, monitors calibration stability, and det
 
 ---
 
----
 
 # Project Structure
 
@@ -261,8 +259,6 @@ Links:
 - docs/model_card.md  
 - docs/data_shift.md  
 - system_design.md  
-
----
 
 ---
 

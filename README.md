@@ -32,11 +32,25 @@ The system design emphasizes **interpretability, reliability, and responsible AI
 
 ---
 
+## Project Highlights
+
+| Component | Description |
+|-----------|-------------|
+| CKD Risk Prediction | Machine learning model predicts CKD risk from patient clinical features |
+| SHAP Explainability | Identifies which features contribute most to the prediction |
+| Clinical Evidence Retrieval | Retrieves relevant clinical guidelines using vector similarity search |
+| LLM Clinical Reasoning | Generates evidence-grounded explanations using SHAP insights and retrieved clinical knowledge |
+| AI Safety Guardrails | Validates generated explanations using safety filters and consistency checks |
+| Human-in-the-Loop Review | Enables clinicians to review model explanations before final decisions |
+| Monitoring & Governance | Tracks prediction confidence, system reliability, and data drift |
+---
+
 ## Quick Navigation
 
 | Section | Description |
 |--------|-------------|
 | Overview | Project goals and background |
+| Project Highlights | High-level system components|
 | Key Features | Core capabilities of the system |
 | Architecture | High-level system architecture |
 | System Pipeline | End-to-end decision pipeline |
@@ -76,20 +90,20 @@ Prediction confidence tracking, drift detection, and system observability ensure
 
 # Architecture
 
-> **System Architecture Summary**
->
-> This system follows a layered AI architecture combining:
->
-> - Machine Learning risk prediction  
-> - SHAP-based explainability  
-> - Retrieval-Augmented Generation (RAG) for clinical evidence  
-> - LLM-based clinical reasoning  
-> - AI safety guardrails  
-> - Human-in-the-loop validation  
+![System Architecture](docs/architecture/System_architecture.png)
+
+### Architecture Layers Summary
+
+| Layer | Responsibility |
+|------|----------------|
+| Presentation Layer | Streamlit dashboard for clinician interaction |
+| API Layer | FastAPI gateway handling request routing |
+| Orchestration Layer | AI pipeline controller managing prediction workflow |
+| AI Intelligence Layer | CKD prediction model, SHAP explainability, RAG retrieval, and LLM reasoning |
+| Data & Knowledge Layer | Model registry, SHAP store, vector index, and clinical knowledge base |
+| Monitoring & Governance | Model monitoring, data drift detection, and system observability |
 >
 > The architecture prioritizes **interpretability, reliability, and clinical safety**.
-
-![System Architecture](docs/architecture/System_architecture.png)
 
 For detailed architecture documentation see:
 
@@ -103,6 +117,29 @@ For detailed architecture documentation see:
 The orchestration controller executes the following pipeline:
 
 Patient Input → Risk Prediction → SHAP Explainability → Evidence Retrieval → LLM Clinical Reasoning → Guardrail Validation → Clinician Review
+
+## End-to-End Workflow
+
+1. **Patient Data Input**
+   - Clinical features are entered through the Streamlit dashboard.
+
+2. **Risk Prediction**
+   - The CKD machine learning model predicts the patient's disease risk.
+
+3. **Explainability**
+   - SHAP identifies the most influential clinical variables affecting the prediction.
+
+4. **Evidence Retrieval**
+   - Relevant clinical guideline evidence is retrieved using vector similarity search.
+
+5. **LLM Clinical Reasoning**
+   - The LLM synthesizes SHAP insights and clinical evidence to generate explanations.
+
+6. **Safety Validation**
+   - AI guardrails validate outputs using safety filters and reasoning checks.
+
+7. **Clinician Review**
+   - The final explanation is presented for clinician review and interpretation.
 
 Each stage ensures predictions remain **interpretable, evidence-grounded, and safety validated** before reaching clinicians.
 
@@ -139,34 +176,36 @@ The system tracks prediction confidence, monitors calibration stability, and det
 ```text
 clinical-ai-system/
 │
-├── api/                      # FastAPI endpoints and API gateway
-├── configs/                  # Configuration files
-├── data/                     # Dataset and preprocessing artifacts
+├── api/                # FastAPI endpoints and API gateway
+├── configs/            # Configuration files
+├── data/               # Dataset and preprocessing artifacts
 │
-├── genai/                    # Generative AI pipeline
-│   ├── controller/           # Pipeline orchestration
-│   ├── explainability/       # SHAP explanation logic
-│   ├── retrieval/            # Clinical evidence retrieval (RAG)
-│   ├── llm/                  # LLM reasoning components
-│   ├── guardrails/           # Safety validation
-│   ├── evaluation/           # Model evaluation
-│   └── prompts/              # Prompt templates
+├── genai/              # Generative AI pipeline
+│   ├── controller/     # Pipeline orchestration
+│   ├── explainability/ # SHAP explanation logic
+│   ├── retrieval/      # Clinical evidence retrieval (RAG)
+│   ├── llm/            # LLM reasoning components
+│   ├── guardrails/     # Safety validation
+│   ├── evaluation/     # Model evaluation
+│   └── prompts/        # Prompt templates
 │
-├── models/                   # Machine learning models
-├── services/                 # Core prediction services
-├── tests/                    # System tests
+├── models/             # Machine learning models
+├── services/           # Core prediction services
+├── tests/              # System tests
 │
 ├── docs/
 │   ├── architecture/
 │   │   ├── architecture_overview.md
 │   │   └── System_architecture.png
+│   │
 │   ├── model_card.md
 │   └── data_shift.md
 │
-├── system_design.md          # Detailed system design
+├── system_design.md    # Detailed system design
 ├── requirements.txt
 ├── Dockerfile
 └── README.md
+```
 
 ---
 

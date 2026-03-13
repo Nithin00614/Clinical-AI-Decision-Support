@@ -12,6 +12,14 @@ An **Explainable AI Clinical Decision Support System** for Chronic Kidney Diseas
 
 The system integrates **ML predictions, explainability, retrieval-augmented reasoning, safety guardrails, and monitoring** to support clinicians with interpretable decision support.
 
+## Project Status
+
+This project is a **research prototype** demonstrating the architecture of an explainable AI clinical decision support system.
+
+It focuses on **system design, explainability, and AI reasoning pipelines** rather than production deployment.
+
+The implementation is intended for **educational and research purposes**.
+
 ---
 
 # Overview
@@ -90,7 +98,9 @@ Prediction confidence tracking, drift detection, and system observability ensure
 
 # Architecture
 
-![Architecture](docs/architecture/system_architecture.png)
+<p align="center">
+  <img src="docs/architecture/System_architecture.png" width="900">
+</p>
 
 ### Architecture Layers Summary
 
@@ -105,9 +115,19 @@ Prediction confidence tracking, drift detection, and system observability ensure
 >
 > The architecture prioritizes **interpretability, reliability, and clinical safety**.
 
-For detailed architecture documentation see:
+### Detailed Architecture Documentation
 
-➡️ **docs/architecture/architecture_overview.md**
+- **System Architecture Overview**  
+  [docs/architecture/architecture_overview.md](docs/architecture/architecture_overview.md)
+
+- **Model Card**  
+  [docs/model_card.md](docs/model_card.md)
+
+- **Data Drift Monitoring**  
+  [docs/data_shift.md](docs/data_shift.md)
+
+- **Detailed System Design**  
+  [system_design.md](system_design.md)
 
 ---
 

@@ -120,15 +120,6 @@ Prediction confidence tracking, drift detection, and system observability ensure
 - **System Architecture Overview**  
   [docs/architecture/architecture_overview.md](docs/architecture/architecture_overview.md)
 
-- **Model Card**  
-  [docs/model_card.md](docs/model_card.md)
-
-- **Data Drift Monitoring**  
-  [docs/data_shift.md](docs/data_shift.md)
-
-- **Detailed System Design**  
-  [system_design.md](system_design.md)
-
 ---
 
 
@@ -273,10 +264,17 @@ Detailed documentation for the system is available in the `docs` directory.
 
 Links:
 
-- docs/architecture/architecture_overview.md  
-- docs/model_card.md  
-- docs/data_shift.md  
-- system_design.md  
+**System Architecture Overview** 
+  [docs/architecture/architecture_overview.md](docs/architecture/architecture_overview.md)
+
+**Model Card**  
+  [docs/model_card.md](docs/model_card.md)
+
+- **Data Drift Monitoring**  
+  [docs/data_shift.md](docs/data_shift.md)
+
+- **Detailed System Design**  
+  [system_design.md](system_design.md)
 
 ---
 

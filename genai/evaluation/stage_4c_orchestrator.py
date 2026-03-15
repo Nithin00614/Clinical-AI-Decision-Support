@@ -6,7 +6,8 @@ from genai.explainability.clinical_shap_translator import translate_shap
 from genai.explainability.shap_formatter import build_structured_shap
 from genai.explainability.clinical_shap_translator import generate_clinical_sentences
 from genai.explainability.shap_loader import load_expected_features
-from genai.evaluation.reasoning_controller import (compute_reasoning_confidence, decide_mode, detect_explanation_mismatch)
+from genai.evaluation.reasoning_controller import (compute_reasoning_confidence, detect_explanation_mismatch)
+from genai.controller.system_controller import decide_mode
 from genai.data.artifact_loader import load_drift_metrics_safe
 import logging
 import time

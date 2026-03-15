@@ -13,7 +13,7 @@ Controls contribution of:
 
 ## Decision Modes
 - SAFE: Low confidence
-- NORMAL: Moderate confidence
-- VERBOSE: High confidence
+- VERBOSEE: Moderate confidence
+- NORMAL: High confidence
 
 These thresholds can be tuned without retraining the model.

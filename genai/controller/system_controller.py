@@ -1,15 +1,11 @@
-def decide_mode(payload):
+def decide_mode(confidence: float, risk_score: float):
 
-    confidence = payload.get("confidence", 1.0)
-    risk = payload.get("risk_score", 0.5)
-
-    # SAFE when uncertainty high
-    if risk >= 0.85 or confidence < 0.50:
+    if 0.45 < risk_score <0.55:
         return "SAFE"
 
-    # VERBOSE when medium confidence OR borderline risk
-    if 0.40 <= risk < 0.85:
+    if confidence < 0.30:
+        return "SAFE"
+    elif confidence < 0.65:
         return "VERBOSE"
-
-    return "NORMAL"
-
+    else:
+        return "NORMAL"

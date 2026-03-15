@@ -58,17 +58,17 @@ def apply_output_guardrails(
         return {
             "mode": "SAFE_MODE",
             "text": (
-                "The system is operating in uncertainty-aware observation mode. "
-                "Automated reasoning is intentionally constrained due to limited confidence. "
-                "Clinical review is recommended before action."
+                "The System is Operating in Uncertainty-Aware Observation Mode. "
+                "Automated Reasoning is Intentionally Constrained Due to Limited Confidence. "
+                "Clinical Review is Recommended Before Action."
             ),
         }
 
     # 3. Confidence-aware disclaimer
     if confidence is not None and confidence < 0.6:
         llm_text += (
-            "\n\nNote: Model confidence is low. "
-            "This explanation should be interpreted cautiously."
+            "\n\nNote: Model Confidence is Low. "
+            "This Explanation Should be Interpreted Cautiously."
         )
 
     # 4. Normal pass-through

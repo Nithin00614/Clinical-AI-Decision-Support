@@ -14,17 +14,6 @@ def compute_reasoning_confidence(risk_score: float,structured_shap: dict, retrie
         confidence *= 0.9
     return round(confidence, 3)
 
-def decide_mode(confidence: float, risk_score: float):
-
-    if 0.45 < risk_score <0.55:
-        return "SAFE"
-
-    if confidence < 0.30:
-        return "SAFE"
-    elif confidence < 0.65:
-        return "VERBOSE"
-    else:
-        return "NORMAL"
 
 def detect_explanation_mismatch(structured_shap, llm_text: str):
     if not structured_shap.get("vector_available") or not llm_text:

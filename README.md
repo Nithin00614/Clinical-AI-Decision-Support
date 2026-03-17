@@ -185,6 +185,8 @@ clinical-ai-system/
 │   │   ├── architecture_overview.md
 │   │   └── System_architecture.png
 │   │
+|   ├── failure_modes.md
+|   ├── deployment_staretgy.md
 │   ├── model_card.md
 │   └── data_shift.md
 │
@@ -259,15 +261,17 @@ Detailed documentation for the system is available in the `docs` directory.
 |--------|-------------|
 | Architecture Overview | High-level system architecture |
 | Model Card | Model behavior, evaluation, and limitations |
+| Failure Modes | Identified system failure scenarios and mitigation strategies |
+| Deployment Strategy | Design-level deployment architecture, services, and scaling considerations |
 | Data Shift | Data drift monitoring and mitigation |
 | System Design | Detailed design decisions and implementation |
 
 Links:
 
-**System Architecture Overview** 
+- **System Architecture Overview** 
   [docs/architecture/architecture_overview.md](docs/architecture/architecture_overview.md)
 
-**Model Card**  
+- **Model Card**  
   [docs/model_card.md](docs/model_card.md)
 
 - **Data Drift Monitoring**  
@@ -276,6 +280,11 @@ Links:
 - **Detailed System Design**  
   [system_design.md](system_design.md)
 
+- **Failure Modes and Safety** 
+  [Failure Modes & Safety](docs/failure_modes.md)
+
+- **Deployment Strategy** 
+  [Deployment Strategy](docs/deployment_strategy.md)
 ---
 
 # Running the System

@@ -41,8 +41,8 @@ def run_llm_stage(stage4):
 
     clinician_summary = ""
     if decision_mode == "SAFE":
-        explanation = ("System reliability is limited."
-                       "Automated reasoning is restricted and clinician review is recommended.")
+        explanation = ("System Reliability is Limited."
+                       "Automated Reasoning is Restricted and Clinician Review is Recommended.")
         clinician_summary = explanation
         explanation_body = explanation
         references = ""

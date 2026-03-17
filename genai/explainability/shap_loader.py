@@ -16,7 +16,7 @@ BACKGROUND_PATH = BASE_DIR / "genai" / "data" / "artifacts" / "background_sample
 
 # Load pipeline
 # Handle calibrated vs non-calibrated pipeline
-# Handle calibrated vs non-calibrated pipeline
+
 
 pipeline = joblib.load(MODEL_PATH)
 

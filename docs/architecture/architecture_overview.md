@@ -155,7 +155,6 @@ This layer ensures reliability and operational monitoring.
 
 ---
 
----
 
 # Execution Flow
 
@@ -188,15 +187,3 @@ The system tracks model performance, data drift, and operational reliability to 
 
 ---
 
-# Additional Documentation
-
-Detailed implementation details are documented in:
-
-system_design.md
-
-Additional supporting documents:
-
-docs/model_card.md  
-docs/data_shift.md
-
-These documents describe model behavior, evaluation methodology, and robustness considerations.

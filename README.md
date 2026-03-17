@@ -268,23 +268,24 @@ Detailed documentation for the system is available in the `docs` directory.
 
 Links:
 
-- **System Architecture Overview** 
-  [docs/architecture/architecture_overview.md](docs/architecture/architecture_overview.md)
+- **System Architecture Overview**  
+  → [Open](docs/architecture/architecture_overview.md)
 
 - **Model Card**  
-  [docs/model_card.md](docs/model_card.md)
+  → [Open](docs/model_card.md)
 
 - **Data Drift Monitoring**  
-  [docs/data_shift.md](docs/data_shift.md)
+  → [Open](docs/data_shift.md)
 
 - **Detailed System Design**  
-  [system_design.md](system_design.md)
+  → [Open](system_design.md)
 
-- **Failure Modes and Safety** 
-  [Failure Modes & Safety](docs/failure_modes.md)
+- **Failure Modes and Safety**  
+  → [Open](docs/failure_modes.md)
 
-- **Deployment Strategy** 
-  [Deployment Strategy](docs/deployment_strategy.md)
+- **Deployment Strategy**  
+  → [Open](docs/deployment_strategy.md)
+  
 ---
 
 # Running the System

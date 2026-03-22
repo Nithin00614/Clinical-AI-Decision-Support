@@ -144,6 +144,17 @@ These strategies ensure that model performance remains stable as clinical data e
 
 ---
 
+## 8. Current Implementation (v1.0)
+
+Drift and calibration artifacts are initialized as empty placeholders in v1.0.
+
+These artifacts are designed to be populated by an offline monitoring pipeline and are not directly coupled to runtime decision-making in the current version.
+
+The system includes safe loaders to handle missing or empty drift metrics gracefully, defaulting to conservative assumptions without interrupting the prediction and reasoning pipeline.
+
+This design ensures forward compatibility, allowing real-time drift detection mechanisms (e.g., PSI, KS test) and calibration monitoring to be integrated without requiring changes to the core system architecture.
+
+---
 ## Summary
 
 Distribution shift represents a significant challenge in clinical AI systems.

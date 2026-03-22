@@ -33,7 +33,9 @@ class GroqLLMClient:
                 return response.choices[0].message.content.strip()
 
             except Exception as e:
-                print(f"[LLM ERROR] Attempt {attempt+1}: {e}")
+                if attempt == retries - 1:
+                    print(f"[LLM ERROR] Final attempt failed: {e}")
+                    raise   # Reraise the exception after final attempt
                 time.sleep(1)
 
         # Final fallback

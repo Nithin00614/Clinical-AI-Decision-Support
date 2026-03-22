@@ -138,6 +138,8 @@ def run_stage_4c(input_data: dict, risk_score: float, shap_features: dict):
 
     clinician_trust = compute_clinician_trust(explainability_reliability, reasoning_reliability)
 
+    # Drift metrics are optional in v1.
+    # If unavailable, system defaults to safe assumptions.
     drift_detected = False
 
     drift_metrics = load_drift_metrics_safe()

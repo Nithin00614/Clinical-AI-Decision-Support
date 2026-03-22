@@ -163,6 +163,8 @@ The model has several limitations:
 - not externally validated on multiple clinical populations
 - may be sensitive to distribution shifts
 
+"External validation was attempted but not completed due to limited availability of sufficiently diverse and clean public CKD datasets. A held-out hospital cohort would be required for production validation."
+
 Predictions should therefore be interpreted as **decision-support signals rather than diagnostic conclusions**.
 
 ---

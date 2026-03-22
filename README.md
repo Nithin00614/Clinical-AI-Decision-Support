@@ -14,7 +14,7 @@ The system integrates **ML predictions, explainability, retrieval-augmented reas
 
 ## Project Status
 
-This project is a **research prototype** demonstrating the architecture of an explainable AI clinical decision support system.
+This project is a **production-grade architecture demonstration** demonstrating the architecture of an explainable AI clinical decision support system.
 
 It focuses on **system design, explainability, and AI reasoning pipelines** rather than production deployment.
 
@@ -297,8 +297,15 @@ Follow these steps to run the Clinical AI Decision Support System locally.
 ```bash
 pip install -r requirements.txt
 ```
+### 2. Setup Environment Variables
 
-### 2. Start the Backend API (FastAPI)
+Create a `.env` file in the root directory and add the following:
+
+```env
+GROQ_API_KEY=your_api_key_here
+```
+
+### 3. Start the Backend API (FastAPI)
 
 ```bash
 uvicorn api.main:app --reload
@@ -306,7 +313,7 @@ uvicorn api.main:app --reload
 
 This starts the FastAPI server responsible for routing requests to the AI services.
 
-### 3. Launch the Streamlit Dashboard
+### 4. Launch the Streamlit Dashboard
 
 ```bash
 streamlit run app.py

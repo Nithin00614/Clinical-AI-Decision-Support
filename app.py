@@ -794,6 +794,9 @@ with tabs[1]:
         if mode == "SAFE":
             llm_used = False
 
+        if mode == "SAFE":
+            llm_fallback = True
+
         if not explainability_status:
             explainability_status = "UNAVAILABLE"
 

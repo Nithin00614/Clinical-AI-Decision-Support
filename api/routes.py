@@ -81,7 +81,7 @@ def review_queue():
 def metadata():
     return {
         "Model_version": "CKD-Predictor-v1.0",
-        "Model_trained_on": "10-01-2026",
+        "Model_trained_on": "20-01-2026",
         "Feature_schema": "Ckd_Features_v1.0",
         "Training_data_version": "CKD_Dataset_v1.0",
         "Explainability": "SHAP",
